@@ -24,6 +24,7 @@ export default function users({
   return (
     <div className="m-4 rounded-lg p-10 bg-slate-100">
             <div className="pb-4 text-2xl">Route: /users/:pid  loader = clientLoader</div>
+            <div>route("/users","routes/users.tsx"),</div>
             <pre className=" text-blue-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>
         </div>
   );

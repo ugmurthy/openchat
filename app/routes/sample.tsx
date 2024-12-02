@@ -8,7 +8,7 @@ export async function loader() {
     return (
         <div className="m-4 rounded-lg text-center p-10 bg-slate-200">
             <h1 className=" text-blue-600 text-xl font-thin">{loaderData.message}</h1>
-            <div>Route: /sample requires an entry in route.ts that matches path with route filename.</div>
+            <div>route("sample","routes/sample.tsx"),</div>
         </div>
     )
 

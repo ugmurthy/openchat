@@ -17,6 +17,7 @@ export default function susers({
     
       <div className="m-4 rounded-lg p-10 bg-slate-100">
             <div className="pb-4 text-2xl">Route: /susers/:pid  loader = ServerLoader</div>
+            <div>route("susers/:pid","routes/susers.pid.tsx"),</div>
             <pre className=" text-green-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>
             
         </div>

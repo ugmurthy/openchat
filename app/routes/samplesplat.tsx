@@ -14,7 +14,7 @@ export async function loader({params}:Route.LoaderArgs) {
     return (
         <div className="m-4 rounded-lg text-center p-10 bg-slate-200">
             <pre className=" text-blue-600 text-xl font-thin">{(loaderData.message)}</pre>
-            <div>Route: /samplesplat/*</div>
+            <div>route("samplesplat/*","routes/samplesplat.tsx")</div>
         </div>
     )
 
