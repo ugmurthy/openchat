@@ -16,7 +16,7 @@ export default function susers({
 }: Route.ComponentProps) {
   const users = loaderData;
   return (
-    <div className="m-4 rounded-lg p-10 bg-slate-100">
+        <div className="m-4 rounded-lg p-10 bg-slate-100">
             <div className="pb-4 text-2xl">Route: /susers/:pid  loader = Server Loader</div>
             <div>route("/susers","routes/susers.tsx"),</div>
             <pre className=" text-green-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>

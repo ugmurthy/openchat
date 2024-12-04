@@ -12,6 +12,9 @@ export default [
          // routes with server loader 
          route("susers/:pid","routes/susers.pid.tsx"),
          route("/susers","routes/susers.tsx"),
-         
+         // posts
+
+         route("/posts","routes/posts.tsx"),
+         route("/sposts","routes/sposts.tsx")
 
         ] satisfies RouteConfig;
