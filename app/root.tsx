@@ -1,3 +1,8 @@
+//1. for clerk
+import { rootAuthLoader } from '@clerk/react-router/ssr.server'
+//2. for clerk
+import { ClerkProvider, SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/react-router'
+
 import {
   isRouteErrorResponse,
   Links,
@@ -9,6 +14,11 @@ import {
 
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
+
+//3. for clerk
+export async function loader(args: Route.LoaderArgs) {
+  return rootAuthLoader(args)
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -42,9 +52,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
-  return <Outlet />;
+//4. for clerk App function
+export default function App({ loaderData }: Route.ComponentProps) {
+  return (
+    <ClerkProvider
+      loaderData={loaderData}
+      signUpFallbackRedirectUrl="/"
+      signInFallbackRedirectUrl="/"
+    >
+      <header className="flex items-center justify-center py-8 px-4">
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </header>
+      <main>
+        <Outlet />
+      </main>
+    </ClerkProvider>
+  )
 }
+
+// original App function
+//export default function App() {
+//  return <Outlet />;
+//}
 
 // export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 //   let message = "Oops!";
