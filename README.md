@@ -19,7 +19,7 @@ A modern, production-ready template for building full-stack React applications u
 Install the dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Development
@@ -27,7 +27,7 @@ npm install
 Start the development server with HMR:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Your application will be available at `http://localhost:5173`.
@@ -37,7 +37,7 @@ Your application will be available at `http://localhost:5173`.
 Create a production build:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## Deployment

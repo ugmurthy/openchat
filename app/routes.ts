@@ -2,6 +2,8 @@ import { type RouteConfig, index ,route} from "@react-router/dev/routes";
 
 export default [
     index("routes/home.tsx"),
+         route("sign-in/*","routes/sign-in.tsx"),
+         route("profile","routes/profile.tsx"),
          route("component","routes/component.tsx"),
          route("sample","routes/sample.tsx"),
          //route("sampletypes","routes/sampletypes.tsx"),
@@ -13,8 +15,9 @@ export default [
          route("susers/:pid","routes/susers.pid.tsx"),
          route("/susers","routes/susers.tsx"),
          // posts
-
          route("/posts","routes/posts.tsx"),
-         route("/sposts","routes/sposts.tsx")
+         route("/sposts","routes/sposts.tsx"),
+        //  route("/openchat","routes/openchat.tsx"),
+        //  route("/openchatstream","routes/openchatstream.tsx")
 
         ] satisfies RouteConfig;

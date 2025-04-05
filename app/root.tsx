@@ -5,6 +5,7 @@ import { ClerkProvider, SignedIn, SignedOut, UserButton, SignInButton } from '@c
 
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
@@ -62,10 +63,15 @@ export default function App({ loaderData }: Route.ComponentProps) {
     >
       <header className="flex items-center justify-center py-8 px-4">
         <SignedOut>
+          {/* Good place to put any info relevant for user who have not signed in*/}
           <SignInButton />
         </SignedOut>
         <SignedIn>
+          {/* Good place to put heaader common for all pages */}
+          <div className='flex flex-col items-center  w-full max-w-4xl'>
           <UserButton />
+          <Link to="/" className="underline"><span>Home</span></Link>
+          </div>
         </SignedIn>
       </header>
       <main>
