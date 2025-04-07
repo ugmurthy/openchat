@@ -17,7 +17,11 @@ export default [
          // posts
          route("/posts","routes/posts.tsx"),
          route("/sposts","routes/sposts.tsx"),
-        //  route("/openchat","routes/openchat.tsx"),
-        //  route("/openchatstream","routes/openchatstream.tsx")
+  
+        // api routes
+        route("api/v1/models", "routes/api/v1/models.tsx"),
+        route("api/v1/models/:author/:model", "routes/api/v1/models.author.model.tsx"),
+        route("api/v1/chat", "routes/api/v1/chat.tsx"),
+
 
         ] satisfies RouteConfig;
