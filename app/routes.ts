@@ -17,7 +17,10 @@ export default [
          // posts
          route("/posts","routes/posts.tsx"),
          route("/sposts","routes/sposts.tsx"),
-  
+            // openchat
+        //route("/chat","routes/chat.tsx"),
+        route("chat","routes/chat.tsx"),
+        
         // api routes
         route("api/v1/models", "routes/api/v1/models.tsx"),
         route("api/v1/models/:author/:model", "routes/api/v1/models.author.model.tsx"),

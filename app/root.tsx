@@ -2,10 +2,10 @@
 import { rootAuthLoader } from '@clerk/react-router/ssr.server'
 //2. for clerk
 import { ClerkProvider, SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/react-router'
-
 import {
   isRouteErrorResponse,
   Link,
+  NavLink,
   Links,
   Meta,
   Outlet,
@@ -15,7 +15,8 @@ import {
 
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
-
+//import Header from "~/components/Header"
+import Header from "~/components/Header"
 //3. for clerk
 export async function loader(args: Route.LoaderArgs) {
   return rootAuthLoader(args)
@@ -61,16 +62,20 @@ export default function App({ loaderData }: Route.ComponentProps) {
       signUpFallbackRedirectUrl="/"
       signInFallbackRedirectUrl="/"
     >
+      
+     
+
       <header className="flex items-center justify-center py-8 px-4">
         <SignedOut>
           {/* Good place to put any info relevant for user who have not signed in*/}
           <SignInButton />
         </SignedOut>
         <SignedIn>
+        
           {/* Good place to put heaader common for all pages */}
-          <div className='flex flex-col items-center  w-full max-w-4xl'>
-          <UserButton />
-          <Link to="/" className="underline"><span>Home</span></Link>
+          <div className='flex flex-col items-center  w-full max-w-6xl'>
+            <Header />
+          {/*<UserButton />*/}
           </div>
         </SignedIn>
       </header>

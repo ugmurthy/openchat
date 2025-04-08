@@ -5,6 +5,7 @@ import { getAuth } from '@clerk/react-router/ssr.server'
 import { Link } from "react-router";
 import {getTask} from "~/api/tasks";
 
+
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "OpenRouter chat" },
@@ -19,7 +20,7 @@ export async function action(args: Route.ActionArgs) {
   // Protect the route by checking if the user is signed in
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
-  }
+}
 
   //let {prompt,model, task,temperature, max_tokens} =  args.params;
     let {prompt,model, task,temperature, max_tokens} = await args.request.json();
