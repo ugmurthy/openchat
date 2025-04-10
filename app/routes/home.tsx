@@ -13,7 +13,7 @@ export function meta({}: Route.MetaArgs) {
 export async function loader(args: Route.LoaderArgs) {
   // Use `getAuth()` to get the user's ID
   const { userId } = await getAuth(args)
-
+  console.log(`${args.request.method}:${args.request.url}`);
   // Protect the route by checking if the user is signed in
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)

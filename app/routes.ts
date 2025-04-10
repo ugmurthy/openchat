@@ -25,6 +25,6 @@ export default [
         route("api/v1/models", "routes/api/v1/models.tsx"),
         route("api/v1/models/:author/:model", "routes/api/v1/models.author.model.tsx"),
         route("api/v1/chat", "routes/api/v1/chat.tsx"),
-
+        route("api/v1/tasks", "routes/api/v1/tasks.tsx"),
 
         ] satisfies RouteConfig;

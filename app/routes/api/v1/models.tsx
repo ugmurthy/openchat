@@ -20,7 +20,7 @@ export async function loader(args: Route.LoaderArgs) {
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
   }
-  
+  console.log(`${args.request.method}:${args.request.url}`);
   // get models
     const models = await get_models();
     if (Object.keys(models).length === 0) {
@@ -39,7 +39,7 @@ export default function Home({actionData,loaderData
     const {models} = loaderData;
 
     const m_div = models.map((m)=> 
-                      <div className="text-xs">
+                      <div className="text-xs" key={m.id}>
                           
                           <pre>{new Date(m.created*1000).toDateString().split(" ").slice(1,4).join("-")}{" "}<Link className="text-blue-600 underline" to={"/api/v1/models/"+m.id}>{m.id}</Link>{" "}{m.context_length}{" "}{m.architecture.modality}</pre>
                       </div>)

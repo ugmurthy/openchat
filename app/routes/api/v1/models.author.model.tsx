@@ -18,6 +18,7 @@ export async function loader(args: Route.LoaderArgs) {
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
   }
+  console.log(`${args.request.method}:${args.request.url}`);
   const {author,model} = args.params;
   const model_name = model as string;
   const author_name = author as string;

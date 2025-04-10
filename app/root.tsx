@@ -45,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className='w-full max-w-3xl md:max-w-4xl lg:max-w-6xl xl:max-w-7xl mx-auto bg-gray-100'>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -65,7 +65,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       
      
 
-      <header className="flex items-center justify-center py-8 px-4">
+      <header className="flex items-center justify-center">
         <SignedOut>
           {/* Good place to put any info relevant for user who have not signed in*/}
           <SignInButton />
@@ -73,13 +73,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <SignedIn>
         
           {/* Good place to put heaader common for all pages */}
-          <div className='flex flex-col items-center  w-full max-w-6xl'>
+          <div className='flex flex-col items-center w-full'>
             <Header />
           {/*<UserButton />*/}
           </div>
         </SignedIn>
       </header>
-      <main>
+      <main className='bg-gray-100'>
         <Outlet />
       </main>
     </ClerkProvider>

@@ -21,7 +21,7 @@ export async function action(args: Route.ActionArgs) {
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
 }
-
+console.log(`${args.request.method}:${args.request.url}`);
   //let {prompt,model, task,temperature, max_tokens} =  args.params;
     let {prompt,model, task,temperature, max_tokens} = await args.request.json();
     let features = {temperature,max_tokens}
