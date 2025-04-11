@@ -35,7 +35,8 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
             });
     
             if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
+              setError(`HTTP error! Status: ${response.status}`);
+              //throw new Error(`HTTP error! Status: ${response.status}`);
             }
             // Get the reader from the response body stream
             const reader = response.body.getReader();
@@ -69,7 +70,7 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
               setIsConnected(false);
               // Try to reconnect after a delay
               console.log('Reconnecting in 3 seconds...');
-              setTimeout(fetchStream, 3000);
+              setTimeout(fetchStream, 10000);
             }
           }
         };
@@ -84,7 +85,7 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
           setIsConnected(false);
         };
       }, [prompt, model, task, BASE_URL]);
-      console.log("useOpenRouter compact messages",_.compact(messages));
+      //console.log("useOpenRouter compact messages",_.compact(messages));
       const compactMessages = _.compact(messages);
       
       function abort () {

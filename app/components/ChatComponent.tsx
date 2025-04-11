@@ -9,7 +9,7 @@ Sample component on how to use the useOpenRouter hook
 - the id of response to get more info on inference - such as tokens, latency, model name
 
 */
-import { useState,useRef} from 'react'
+import { useState,useRef, useEffect} from 'react'
 import { useOpenRouter } from "~/hooks/useOpenRouter"; 
 import MarkDownRenderer from '~/components/MarkDownIt';
 
@@ -40,16 +40,40 @@ function parseStreamData(messages) {
 }
 
 
-export default function ChatComponent({prompt,model,task,showStats=false}) {
+export default function ChatComponent({prompt,model,task,cls="max-w-5xl mx-auto",textColor="text-blue-900",showStats=false}) {
     
-    const abortControllerRef = useRef(null);
     if (!model || !prompt) return <div></div>
     const [messages,error,isLoading,isConnected,abort] = useOpenRouter(
         prompt,
         model,
         task,
-        true
+        false
     )
+
+    // CTRL-C to abort streaming
+    useEffect(() => {
+        const handleKeyDown = (event:any) => {
+            // Check if Ctrl key is pressed AND 'c' key is pressed
+            if (event.ctrlKey && event.key === 'c') {
+              // Prevent default copy behavior 
+              event.preventDefault();
+              
+              // Trigger abort
+              abort()
+              console.log('Operation aborted via Ctrl+C');
+            }
+          };
+      
+          // Add event listener
+          window.addEventListener('keydown', handleKeyDown);
+      
+          // Cleanup: remove event listener and abort on unmount
+          return () => {
+            abort();
+            window.removeEventListener('keydown', handleKeyDown);
+            
+          };
+    },[]) // empty array to run only once on mount
 
     if (error) return <pre>Error: {JSON.stringify(error,null,2)}</pre>
     //const idArray = Array.from(idSet);
@@ -65,24 +89,21 @@ export default function ChatComponent({prompt,model,task,showStats=false}) {
     }
     return (
         <div>
-        <div className='flex flex-row justify-left space-x-4'> 
-        <button className='btn btn-circle btn-error' onClick={abort}>x</button>
-        <div>{isLoading?"Loading....":""}</div>
-        <div>{isConnected?"Connected":"Disconnected"}</div>
-        <div className='text-red-500 text-xs font-thin font-mono'>{error&&JSON.stringify(error)}</div>
-        </div>
-        <div className="p-4 text-sm font-thin">
+           
+           <div className="p-4 text-sm ">
             {/*mjson.map((message, index) => (<div>{JSON.stringify(message)}</div>))*/}
             <MarkDownRenderer markdown={content} 
-                                    className="max-w-2xl mx-auto" // Additional Tailwind classes
-                                    fontSize="text-lg"
-                                    fontFamily="font-serif"
-                                    textColor="text-blue-900"/>
+                                    className={cls} // Additional Tailwind classes
+                                    fontSize="text-sm"
+                                    fontFamily="font-sans"
+                                    textColor={textColor}/>
         
-        </div>
-        <div className='p-4 text-xs font-mono font-thin'>
+           </div>
+        <div className='p-4 text-xs font-mono font-thin text-center'>
             {showStats&&JSON.stringify(usage)}
         </div>
+        <div className='text-red-500 text-xs font-thin font-mono text-center'>{error&&JSON.stringify(error)}</div>
+        <div className='py-20'></div>
         </div>
         )
 
