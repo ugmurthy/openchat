@@ -8,6 +8,22 @@ const Header = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const menuItems = <div className="navbar-center hidden md:flex">
+                      <ul className="menu menu-horizontal px-1">
+                        <li>
+                          <a className="hover:text-cyan-400" href="/">Home</a>
+                        </li>
+                        <li>
+                          <a className="hover:text-cyan-400" href="/api/v1/models">Models</a>
+                        </li>
+                        <li>
+                          <a className="hover:text-cyan-400" href="/chat">Chat</a>
+                        </li>
+                        <li>
+                          <a className="hover:text-cyan-400" href="#">Contact</a>
+                        </li>
+                      </ul>
+                  </div>
   return (
     <header className="navbar bg-base-100 text-base-content sticky top-0 z-10 shadow-lg">
       <div className="navbar-start">
@@ -70,33 +86,20 @@ const Header = () => {
 
       {/* Mobile Menu (Dropdown) */}
       {isMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-base-100 md:hidden">
+        <div className="absolute top-full right-auto  w-full bg-base-100 md:hidden z-10">
           <ul className="menu p-4 shadow-lg">
-            <li>
-              <a className="hover:text-cyan-400" href="#">Home</a>
-            </li>
-            <li>
-              <a className="hover:text-cyan-400" href="#">Features</a>
-            </li>
-            <li>
-              <a className="hover:text-cyan-400" href="#">Pricing</a>
-            </li>
-            <li>
-              <a className="hover:text-cyan-400" href="#">Contact</a>
-            </li>
-            <li>
-              <a className="hover:text-cyan-400 flex items-center" href="#">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                Profile
-              </a>
-            </li>
+          <li>
+            <a className="hover:text-cyan-400" href="/">Home</a>
+          </li>
+          <li>
+            <a className="hover:text-cyan-400" href="/api/v1/models">Models</a>
+          </li>
+          <li>
+            <a className="hover:text-cyan-400" href="/chat">Chat</a>
+          </li>
+          <li>
+            <a className="hover:text-cyan-400" href="#">Contact</a>
+          </li>
           </ul>
         </div>
       )}

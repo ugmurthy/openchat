@@ -1,9 +1,12 @@
-import Prompt from "~/components/Prompt2";
+import Prompt from "~/components/Prompt";
 import { Route } from "./+types/chat";
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
 import ChatComponent from "~/components/ChatComponent";
 import MarkDownRenderer from '~/components/MarkDownIt';
+import Tablist from "~/components/Tablist";
+
+
 export async function loader(args: Route.LoaderArgs) {
   const {userId} = await getAuth(args);
   if (!userId) {
@@ -78,6 +81,7 @@ export default function Component({loaderData,actionData,params,matches}: Route.
           <Prompt url="/chat"></Prompt>
           </div>
       </div>
+    <Tablist />
     {debug &&<>
     <div className="text-2xl">General Component</div>
     <div className="text-lg">Exposes all ComponentProps for this route</div>
