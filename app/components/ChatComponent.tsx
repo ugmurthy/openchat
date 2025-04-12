@@ -12,6 +12,9 @@ Sample component on how to use the useOpenRouter hook
 import { useState,useRef, useEffect} from 'react'
 import { useOpenRouter } from "~/hooks/useOpenRouter"; 
 import MarkDownRenderer from '~/components/MarkDownIt';
+import CommandCopy from "~/components/CommandCopy";
+import DownLoadmd from "~/components/DownLoadmd";
+
 
 /*
 sample error object: this is returned when the rate limit is exceeded : return value of function parseStreamData.
@@ -99,6 +102,11 @@ export default function ChatComponent({prompt,model,task,cls="max-w-5xl mx-auto"
                                     textColor={textColor}/>
         
            </div>
+           <div className='flex flex-row justify-center items-center space-x-2'>
+          <CommandCopy txt={content} btnTxt="Copy"></CommandCopy>
+          <DownLoadmd txt={content}></DownLoadmd>
+          </div>
+          
         <div className='p-4 text-xs font-mono font-thin text-center'>
             {showStats&&JSON.stringify(usage)}
         </div>

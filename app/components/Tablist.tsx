@@ -34,7 +34,7 @@ const TabsComponent: React.FC<TabsComponentProps> = ({
           {tabs.map((tab) => (
             <button
               key={tab.name}
-              className={`px-4 py-2 ${borderThicknessClass} ${
+              className={`px-4 py-2 text-xs ${borderThicknessClass} ${
                 activeTab === tab.name
                 ? `${borderColor} ${backgroundColor} border-b-0 rounded-t-xl font-medium`
                 : 'border-b border-transparent'

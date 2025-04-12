@@ -6,7 +6,6 @@ import ChatComponent from "~/components/ChatComponent";
 import MarkDownRenderer from '~/components/MarkDownIt';
 import Tablist from "~/components/Tablist";
 
-
 export async function loader(args: Route.LoaderArgs) {
   const {userId} = await getAuth(args);
   if (!userId) {
@@ -63,7 +62,25 @@ export default function Component({loaderData,actionData,params,matches}: Route.
   
   // set this to true to see all the data passed to this component
   const debug = true;;
-
+  const tabs = [
+              {name:"prompt",content: <>{prompt && <div className="p-2 rounded-lg justify-end text-gray-500 bg-gray-50 max-w-4xl">
+                <MarkDownRenderer markdown={prompt} 
+                                          className={"max-w-5xl"} // Additional Tailwind classes
+                                          fontSize="text-sm"
+                                          fontFamily="font-sans"
+                                          textColor={"text-gray-500"}/>
+      
+                </div>}</>},
+              {name:"loaderData",
+              content: <pre className="text-xs font-thin text-red-500">Loader Data: {loaderData?JSON.stringify(loaderData,null,2):"None"}</pre>},
+  
+              {name:"actionData",
+              content: <pre className="text-xs font-thin text-blue-500">Action Data: {actionData?JSON.stringify(actionData,null,2):"None"}</pre>},
+              {name:"params",
+              content: <pre className="text-xs font-thin text-red-500">Route Parameters: {JSON.stringify(params,null,2)}</pre>},
+              {name:"matches",
+              content: <pre className="text-xs font-thin text-green-500">Matched Routes: {JSON.stringify(matches,null,2)}</pre>},]
+  
   return (
     <div className="m-4 rounded-lg p-10 bg-blue-50 ">
         {prompt && <div className="p-2 rounded-lg justify-end text-gray-500 bg-gray-50 max-w-4xl">
@@ -75,27 +92,13 @@ export default function Component({loaderData,actionData,params,matches}: Route.
 
           </div>}
         {prompt&&<ChatComponent prompt={prompt} model={model} task={task} showStats={true}></ChatComponent>}
-
+        <Tablist tabs={tabs}/>
        <div className="relative h-screen ">
-          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full">
+          <div className="px-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full">
           <Prompt url="/chat"></Prompt>
           </div>
       </div>
-    <Tablist />
-    {debug &&<>
-    <div className="text-2xl">General Component</div>
-    <div className="text-lg">Exposes all ComponentProps for this route</div>
+   
     
-    <div className="text-xs text-red-500 font-thin">
-        <hr></hr>
-            <pre className="text-red-500">Loader Data: {loaderData?JSON.stringify(loaderData,null,2):"None"}</pre>
-        <hr></hr>
-            <pre className="text-blue-500">Action Data: {actionData?JSON.stringify(actionData,null,2):"None"}</pre>
-        <hr></hr>
-            <pre className="text-red-500">Route Parameters: {JSON.stringify(params,null,2)}</pre>
-        <hr></hr>
-            <pre className="text-green-500">Matched Routes: {JSON.stringify(matches,null,2)}</pre>
-    </div>
-    </>}
   </div>  );
 }
