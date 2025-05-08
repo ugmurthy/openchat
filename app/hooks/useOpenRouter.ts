@@ -4,16 +4,72 @@ import _ from 'lodash';
 // set this url to the url that provides the stream
 const BASE_URL='/api/v1/chat';
 
-export const useOpenRouter = (prompt:string, model:string,task:string="", debug=false) => {
-    const [messages, setMessages] = useState([]);
+var _useOpenRouter_toBeRun = 1;
+
+
+export const useOpenRouter = (prompt:string, model:string,task:string="",url=BASE_URL, debug=false) => {
+    const [data,setData]=useState([])
     const [error,setError]=useState(null);
     
     const abortControllerRef = useRef(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
-    
-    
+    const [usage, setUsage] = useState("");
+    const [text, setText] = useState("");
+    const [contentType, setContentType] = useState("");
+
+        function parseStreamData(dataArray:string[]) {
+          return dataArray
+              .filter(d => d.startsWith('data: '))
+              .map(d => {
+                  // Remove 'data: ' prefix and parse the JSON
+                  //console.log("ChatComponent:f(parseStreamData): d: ",d)
+                  const jsonString = d.substring(6);
+                  try {
+                      if (jsonString === '[DONE]') {
+                          return null; // Handle end of stream
+                      }
+                      // Parse the JSON string
+                      return JSON.parse(jsonString);
+                  } catch (error) {
+                      console.error('Error parsing JSON:', error);
+                      return null;
+                  }
+              })
+              .filter(item => item !== null); // Remove any failed parses
+        }
+
+        function getContent(jsonArray:[]) {
+          // convert json array to content, error if present
+          if (jsonArray.length===0) return ["",null];
+          let chatError=null
+          let content=""
+          
+          for (const item of jsonArray) {
+              if (Object.keys(item).includes("error")) {
+                  chatError=item
+              } else {
+                if (Object.keys(item).includes("usage")) {
+                    setUsage(item);
+                }
+                content=content + item.choices[0]?.delta.content
+              }
+          }
+          
+          return [content,chatError] 
+        }
+
+
     useEffect(() => {
+      
+        /* if (!_useOpenRouter_toBeRun) {
+            return ()=>{ console.log("useOpenRouter: exiting early");}
+        }
+        _useOpenRouter_toBeRun=false; */
+
+        console.log("useOpenRouter: useEffect", _useOpenRouter_toBeRun);
+        _useOpenRouter_toBeRun+=1;
+
         // Create abort controller for fetch
         abortControllerRef.current = new AbortController();
         const { signal } = abortControllerRef.current;
@@ -22,9 +78,10 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
         const fetchStream = async () => {
           try {
             setIsConnected(true);
-            const url = BASE_URL
+            //const url = BASE_URL
             
             debug && console.log("fetchStream url",url);
+            
             const response = await fetch(url, {
               method: 'POST',
               headers: {
@@ -33,11 +90,17 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
               body: JSON.stringify({ prompt, model, task }),
               signal,
             });
-    
+            console.log("useOpenRouter: fetchStream response",response);
             if (!response.ok) {
               setError(`HTTP error! Status: ${response.status}`);
               //throw new Error(`HTTP error! Status: ${response.status}`);
             }
+           
+            let ctype=response.headers.get('Content-Type');
+            console.log("useOpenRouter: fetchStream response,ok content-type ",response.headers.get('Content-Type'));
+            // FUTURE TODO: check for content-type and enable parser 
+            setContentType(ctype);
+
             // Get the reader from the response body stream
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -46,39 +109,42 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
             while (true) {
               const { done, value } = await reader.read();
               if (done) {
+                console.log('Stream finished');
                 break;
               }
     
               // Decode the value(chunk) and add it to our buffer
               buffer += decoder.decode(value, { stream: true });
-              
               // Process any complete JSON objects in the buffer
               let lines = buffer.split('\n');
-              
               // Keep the last line in the buffer if it's incomplete
               buffer = lines.pop() || '';
               // Process complete lines
               debug && console.log("lines",lines);
-              setMessages(prevMessages =>  [...prevMessages, ...lines]);
+              setData(prevLines =>  [...prevLines, ...lines]); // store all lines as array of strings
+
             }
           } catch (err) {
             if (err?.name === 'AbortError') {
-              console.log('Fetch aborted');
+              console.log('Fetch aborted', err);
+              
             } else {
               console.error('Stream error:', err);
               setError(`Connection error: ${err?.message}`);
               setIsConnected(false);
               // Try to reconnect after a delay
-              console.log('Reconnecting in 3 seconds...');
-              setTimeout(fetchStream, 10000);
+              //console.log('Reconnecting in 3 seconds...');
+              //setTimeout(fetchStream, 10000);
             }
           }
         };
     
-        fetchStream();
-    
+        
+          fetchStream();
+        
         // Clean up the connection when component unmounts
         return () => {
+          console.log("useOpenRouter: cleanup on unmount");
           if (abortControllerRef.current) {
             abortControllerRef.current.abort();
           }
@@ -86,7 +152,7 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
         };
       }, [prompt, model, task, BASE_URL]);
       //console.log("useOpenRouter compact messages",_.compact(messages));
-      const compactMessages = _.compact(messages);
+      const compactData = _.compact(data);
       
       function abort () {
         if (abortControllerRef.current) {
@@ -95,7 +161,9 @@ export const useOpenRouter = (prompt:string, model:string,task:string="", debug=
           setIsLoading(false);
         }
       }
-      // Cleanup function to abort the fetch when the component unmounts
-      return [compactMessages,error, isLoading, isConnected,abort]
+      
+
+      return [compactData,error, isLoading, isConnected,abort]
 }            
 
+export default useOpenRouter;

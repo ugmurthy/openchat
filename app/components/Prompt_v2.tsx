@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Paperclip, Search, Pencil, ArrowUp, ChevronsUp, X, GripHorizontal, Square } from 'lucide-react';
+import { Paperclip, Search, Pencil, ArrowUp, ChevronsUp, X, GripHorizontal } from 'lucide-react';
 
 const Prompt = ({url}) => {
   const [text, setText] = useState('');
@@ -8,16 +8,11 @@ const Prompt = ({url}) => {
   
   // Define available badges
   const [availableBadges, setAvailableBadges] = useState([
-    { id: 'task-1', label: 'Deep Search', value: 'Deep Search' },
-    { id: 'task-2', label: 'Generate tweets', value: 'Generate tweets' },
-    { id: 'task-3', label: 'TLDR;', value: 'TLDR' },
-    { id: 'task-4', label: 'Summarise', value: 'summarise' },
-    { id: 'task-5', label: 'Summarise Paper', value: 'summarise_paper' },
-    { id: 'task-6', label: 'Assist a Runner', value: 'assist_distance_runner' },
-    { id: 'task-7', label: 'Create S/w Specs', value: 'create_sw_specs' },
-    { id: 'task-8', label: 'Generate Python Code', value: 'pyCodeGenerator' },
-    { id: 'task-9', label: 'Explain code', value: 'explain_code' },
-
+    { id: 'badge-1', label: 'Summarise', value: 'summarize' },
+    { id: 'badge-2', label: 'Extract Ideas', value: 'extract_ideas' },
+    { id: 'badge-3', label: 'Analyse Patent', value: 'analyze_patent' },
+    { id: 'badge-4', label: 'Explain 2a5yo', value: 'explain_simply' },
+    { id: 'badge-5', label: 'Translate', value: 'translate' },
   ]);
 
   // Badges that have been dragged to the input area
@@ -165,50 +160,13 @@ const Prompt = ({url}) => {
     setSelectedBadges(prev => prev.filter(b => b.id !== badge.id));
   };
   
-  // Function to handle form submission
-  const handleSubmit = (e) => {
-    // No need to prevent default as we want the form to submit
-    
-    // For debugging purposes, we can log the form data
-    // This would be removed in production
-    if (process.env.NODE_ENV === 'development') {
-      const formData = new FormData(e.target);
-      console.log('Form data before submission:');
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-    }
-  };
-
-  // Function to simulate Ctrl+C keypress
-  const handleStopClick = () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'c',
-      code: 'KeyC',
-      ctrlKey: true,
-      bubbles: true,
-      cancelable: true
-    });
-    document.dispatchEvent(event);
-  };
-
   return (
     <div className="w-full max-w-5xl mx-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
-      <form method="post" action={url} encType="multipart/form-data" onSubmit={handleSubmit}>
-        {/* Hidden inputs for badge values - This ensures all selected badges are included in form submission */}
-        {selectedBadges.map((badge, index) => (
-          <input 
-            key={`badge-input-${badge.id}`}
-            type="hidden" 
-            name={`task[${index}]`}
-            value={badge.value} 
-          />
-        ))}
-        
+      <form method="post" action={url} encType="multipart/form-data">
         <div className="relative">
           {/* Selected badges section - where dragged badges appear */}
           <div 
-            className={`flex flex-wrap gap-2 px-4 py-2 mb-2 min-h-10 border border-dashed rounded-xl ${
+            className={`flex flex-wrap gap-2 px-4 py-2 mb-2 min-h-10 border border-dashed ${
               selectedBadges.length === 0 && !isDraggingOverSelected 
                 ? 'border-gray-200' 
                 : 'border-gray-300'
@@ -237,7 +195,7 @@ const Prompt = ({url}) => {
               >
                 <GripHorizontal size={12} className="mr-1 text-blue-600" />
                 <span className="text-sm text-blue-700">{badge.label}</span>
-                {/* Removed hidden input from here as we're adding them at the form level */}
+                <input type="hidden" name={`badges[]`} value={badge.value} />
                 <button
                   type="button"
                   onClick={() => handleRemoveBadge(badge)}
@@ -248,9 +206,8 @@ const Prompt = ({url}) => {
               </div>
             ))}
           </div>
-
-        {/* Available badges row */}
-        <div 
+            {/* Available badges row */}
+            <div 
               className={`flex flex-wrap gap-2 px-4 py-2 mb-2 rounded-md transition-colors duration-200 ${
                 isDraggingOverAvailable ? 'bg-gray-100' : ''
               }`}
@@ -272,16 +229,20 @@ const Prompt = ({url}) => {
                 </div>
               ))}
             </div>
-
           <textarea
             name="inputText"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Ask anything"
-            className="w-full min-h-24 p-4 text-gray-700 placeholder-gray-500 bg-transparent border-none resize-none focus:outline-dotted focus:rounded-xl focus:ring-0"
+            className="w-full min-h-24 p-4 text-gray-700 placeholder-gray-500 bg-transparent border-none resize-none focus:outline-dashed focus:rounded-xl focus:ring-0"
           />
           
-          {/* Display attached files */}
+          
+          
+          <div className="flex flex-col border-t border-gray-100 pt-2">
+            
+            
+            {/* Display attached files */}
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pb-2">
               {files.map((file, index) => (
@@ -298,10 +259,7 @@ const Prompt = ({url}) => {
               ))}
             </div>
           )}
-          
-          <div className="flex flex-col border-t border-gray-100 pt-2">
-            
-            
+
             {/* Tools row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -343,18 +301,9 @@ const Prompt = ({url}) => {
               </div>
               
               <div className="flex items-center space-x-2">
-                {/* New Stop Button */}
-                <button
-                  type="button"
-                  onClick={handleStopClick}
-                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors mr-1"
-                >
-                  <Square size={20} className="text-white" />
-                </button>
-                {/* Send Button with 4px spacing from Stop Button */}
                 <button
                   type="submit"
-                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors"
+                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-600 transition-colors"
                   disabled={!text.trim() && files.length === 0}
                 >
                   <ArrowUp size={20} className="text-white" />

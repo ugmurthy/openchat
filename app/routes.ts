@@ -20,11 +20,14 @@ export default [
             // openchat
         //route("/chat","routes/chat.tsx"),
         route("chat","routes/chat.tsx"),
-        
+  
         // api routes
         route("api/v1/models", "routes/api/v1/models.tsx"),
         route("api/v1/models/:author/:model", "routes/api/v1/models.author.model.tsx"),
         route("api/v1/chat", "routes/api/v1/chat.tsx"),
         route("api/v1/tasks", "routes/api/v1/tasks.tsx"),
-
+        route("api/v1/ollama", "routes/api/v1/ollama.tsx"),
+        route("api/v1/localmodels", "routes/api/v1/localmodels.tsx"),
+        route("api/v1/openroutermodels", "routes/api/v1/openroutermodels.tsx"),
+        route("api/v1/settings", "routes/api/v1/settings.tsx"),
         ] satisfies RouteConfig;

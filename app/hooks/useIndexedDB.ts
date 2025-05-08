@@ -1,6 +1,6 @@
 // useIndexedDB.js
 import { useState, useEffect, useCallback } from 'react';
-import indexedDBService from '../db/IndexedDBService';
+import indexedDBService from '../db/IndexedDBService.client';
 
 /**
  * Custom hook for working with entity data in IndexedDB

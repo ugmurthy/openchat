@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Paperclip, Search, Pencil, ArrowUp, ChevronsUp, X, GripHorizontal, Square } from 'lucide-react';
+import { Paperclip, Search, Pencil, ArrowUp, ChevronsUp, X, GripHorizontal } from 'lucide-react';
 
 const Prompt = ({url}) => {
   const [text, setText] = useState('');
@@ -14,10 +14,6 @@ const Prompt = ({url}) => {
     { id: 'task-4', label: 'Summarise', value: 'summarise' },
     { id: 'task-5', label: 'Summarise Paper', value: 'summarise_paper' },
     { id: 'task-6', label: 'Assist a Runner', value: 'assist_distance_runner' },
-    { id: 'task-7', label: 'Create S/w Specs', value: 'create_sw_specs' },
-    { id: 'task-8', label: 'Generate Python Code', value: 'pyCodeGenerator' },
-    { id: 'task-9', label: 'Explain code', value: 'explain_code' },
-
   ]);
 
   // Badges that have been dragged to the input area
@@ -180,18 +176,6 @@ const Prompt = ({url}) => {
     }
   };
 
-  // Function to simulate Ctrl+C keypress
-  const handleStopClick = () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'c',
-      code: 'KeyC',
-      ctrlKey: true,
-      bubbles: true,
-      cancelable: true
-    });
-    document.dispatchEvent(event);
-  };
-
   return (
     <div className="w-full max-w-5xl mx-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
       <form method="post" action={url} encType="multipart/form-data" onSubmit={handleSubmit}>
@@ -343,18 +327,9 @@ const Prompt = ({url}) => {
               </div>
               
               <div className="flex items-center space-x-2">
-                {/* New Stop Button */}
-                <button
-                  type="button"
-                  onClick={handleStopClick}
-                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors mr-1"
-                >
-                  <Square size={20} className="text-white" />
-                </button>
-                {/* Send Button with 4px spacing from Stop Button */}
                 <button
                   type="submit"
-                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors"
+                  className="p-3 rounded-full bg-gray-500 hover:bg-gray-600 transition-colors"
                   disabled={!text.trim() && files.length === 0}
                 >
                   <ArrowUp size={20} className="text-white" />

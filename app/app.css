@@ -39,10 +39,3 @@ body {
   }
 }
 
-@layer base {
-  think {
-      @apply  font-thin text-gray-900 dark:text-gray-100;
-  }
-
-  }
-  

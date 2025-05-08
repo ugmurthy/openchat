@@ -2,6 +2,8 @@ import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
+import SampleComponent from "~/components/SampleComponent";
+
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -22,6 +24,11 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 
+
 export default function Home() {
-  return <div><Welcome /></div>;
+  return <div><Welcome />
+  <hr />
+  <h2>Sample Component</h2>
+  <SampleComponent />
+  </div>;
 }

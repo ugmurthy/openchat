@@ -1,19 +1,29 @@
-import Download from './Download';
-
-export default function DownLoad({txt}) {
-  const handleDownload = () => {
-    const element = document.createElement('a');
-    const file = new Blob([txt], { type: 'text/markdown' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'markdown-file.md';
-    document.body.appendChild(element); // Required for this to work in Firefox
-    element.click();
-    document.body.removeChild(element);
-  };
-    return (
+import { useState } from "react";
+import Copy from './Copy'
+// @TODO AA Move this to a component
+// eslint-disable-next-line react/prop-types
+export default function CommandCopy({txt, btnTxt="Copy"}) {
+    const [datatip,setDataTip]=useState(btnTxt);
+     
+      function copyToClipBoard() {
+        if (!navigator.clipboard){
+            console.log("Clipboard API not supported")
+            return;
+        }
+        navigator.clipboard.writeText(txt)
+            .then(()=>{console.log("Copied to Clipboard, ",datatip);setDataTip("Copied");})
+            .catch((err) => {
+                console.error("Failed to copy to clipboard",err)      
+            })
+      }
+      function handleCopy2Clipboard() {
+        copyToClipBoard();
+      }
+      return (
         <div className='flex ' >
-        <button className=" btn btn-xs btn-ghost text-left" onClick={handleDownload} >
-          <Download></Download>
+        <button className=" btn btn-xs btn-ghost text-left" onClick={handleCopy2Clipboard}  >
+          <Copy></Copy>
+             
         </button>
         
         </div>

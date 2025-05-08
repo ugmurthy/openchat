@@ -34,7 +34,7 @@ class IndexedDBService {
           return;
         }
   
-        const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+        const request = window.indexedDB.open(this.DB_NAME, this.DB_VERSION);
   
         request.onupgradeneeded = (event) => {
           const db = event.target.result;

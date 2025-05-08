@@ -4,6 +4,7 @@ import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
 import { Link } from "react-router";
 import {getTask} from "~/api/tasks";
+import { extractTextFromURLOrHTML, replaceUrlsWithContent } from "~/helpers/webUtilsServer";
 
 
 export function meta({}: Route.MetaArgs) {
@@ -16,31 +17,38 @@ export function meta({}: Route.MetaArgs) {
 //export async function loader(args: Route.LoaderArgs) {
 export async function action(args: Route.ActionArgs) {
   // Use `getAuth()` to get the user's ID
-  const { userId } = await getAuth(args);
-  // Protect the route by checking if the user is signed in
+  /* const { userId } = await getAuth(args);
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
-}
+  } */
 console.log(`${args.request.method}:${args.request.url}`);
   //let {prompt,model, task,temperature, max_tokens} =  args.params;
     let {prompt,model, task,temperature, max_tokens} = await args.request.json();
     let features = {temperature,max_tokens}
-    console.log("/chat_action formData: task : ", task);
-    console.log("/chat_action formData: model: ", model);
-    console.log("/chat_action formData: prompt: ", prompt);
-    console.log("/chat_action formData: features: ", features);
+    console.log("\t formData: task : ", task);
+    console.log("\t formData: model: ", model);
+    console.log("\t formData: prompt: ", prompt);
+    console.log("\t formData: features: ", features);
     features = {model,...features}
 
-
+    // check if promot contains urls
+    const text = await replaceUrlsWithContent(prompt);
+    if (text) {
+        prompt = text;
+       // task = "summarise"
+    }
+    //console.log("text",text);
     const task_record = await getTask(task);
-    const system = task_record?.system ? task_record.system : "you are a helpful assistant";
+    console.log("task_record",task_record);
+    const system = task_record?.description ? task_record.description : "you are a helpful assistant";
     
     const messages = [
         {role: "system", content: system},
         {role: "user", content: prompt}
     ]
     features = {model,...features};
-
+    console.log("features",features);
+    console.log("messages",messages);
     const response = await chat(features,messages);
     return response;
     
