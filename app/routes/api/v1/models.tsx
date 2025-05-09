@@ -1,5 +1,5 @@
 import type { Route } from "./+types/models";
-import { get_models,get_supported_params } from "~/api/openRouter";
+import { get_models,get_supported_params } from "~/core/openRouter";
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
 import { Link } from "react-router";

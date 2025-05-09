@@ -1,7 +1,7 @@
 import Prompt from "~/components/Prompt";
 import { Route } from "./+types/chat";
 import { redirect } from 'react-router'
-import { getModel } from "~/api/tasks";
+import { getModel } from "~/core/tasks";
 import { getAuth } from '@clerk/react-router/ssr.server'
 import { useEffect, useState, useRef } from "react";
 import indexedDBService from "~/db/indexedDBService3.client";

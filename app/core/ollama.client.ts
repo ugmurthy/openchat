@@ -1,12 +1,26 @@
 
 
 const BASEURL = 'http://localhost:11434/api/'
-export async function fetchJSON(url, body, headers = { 'Content-Type': 'application/json' }) {
-  const response = await fetch(BASEURL+url, {
+
+// for non streaming requests
+/**
+ * Sends a POST request with JSON body and headers to the specified URL.
+ * for non streaming requests only
+ * 
+ * @param {string} url - The base URL for the request, combined with BASEURL.
+ * @param {string} body - The JSON body STRINGIFIED to be sent in the request.
+ * @param {Object} [headers={ 'Content-Type': 'application/json' }] - Optional headers for the request.
+ * @throws {Error} If the response is not OK (200-299).
+ * @returns {*} The parsed JSON response from the server.
+ */
+export async function fetchJSON(url, body, headers = { 'Content-Type': 'application/json' }) {  
+  const options = {
     method: 'POST',
     headers,
     body
-  });
+  };
+  console.log("ollama.server->f(fetchJSON) options ",options)
+  const response = await fetch(BASEURL+url, options);
 
   if (response.ok) {
     return response.json();
@@ -18,19 +32,14 @@ export async function fetchJSON(url, body, headers = { 'Content-Type': 'applicat
   }
 }
 
-/* export async function chat(model,messages,stream=false) {
-    // chat
-    const url = 'chat'
-    const body = JSON.stringify({model,messages,stream})
-    console.log("Body ",body)
-    if (!stream) {
-    const ret_val = await fetchJSON(url,body);
-    } else {
-
-    }
-    return ret_val
-} */
-
+/**
+ * Initiates a chat request to the server.
+ *
+ * @param {object} model - The model associated with the chat.
+ * @param {array} messages - An array of messages sent in the chat.
+ * @param {boolean} [stream=false] - A boolean indicating whether to send a stream of data.
+ * @returns {object|object} - An object containing the response from the server or an HTTP response object if streaming.
+ */
 export async function chat(model, messages, stream = false) {
   // chat
   const url = 'chat';
@@ -84,4 +93,10 @@ export const get_models = async () => {
   }
   const data = await ret_val.json();
   return data.models;
+}
+
+export const get_model_names = async () => {  
+  const models = await get_models();
+  const model_names = models.map(model => model.name);
+  return model_names;
 }

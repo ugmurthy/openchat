@@ -27,6 +27,7 @@ export default [
         route("api/v1/chat", "routes/api/v1/chat.tsx"),
         route("api/v1/tasks", "routes/api/v1/tasks.tsx"),
         route("api/v1/ollama", "routes/api/v1/ollama.tsx"),
+        route("api/v1/ollamalocal", "routes/api/v1/ollamalocal.tsx"),
         route("api/v1/localmodels", "routes/api/v1/localmodels.tsx"),
         route("api/v1/openroutermodels", "routes/api/v1/openroutermodels.tsx"),
         route("api/v1/settings", "routes/api/v1/settings.tsx"),

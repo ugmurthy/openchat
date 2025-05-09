@@ -1,5 +1,5 @@
 import {Route} from "./+types/tasks";
-import {getTasks} from '~/api/tasks';
+import {getTasks} from '~/core/tasks';
 
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'

@@ -5,7 +5,7 @@ const HEADERS = {
     "Authorization": "Bearer " + process.env.OPENROUTER_API_KEY,
     "Content-Type": "application/json",
     "HTTP-Referer": "https://ideaflow.wheat.vercel.app",
-    "X-Title": "OpenChat",
+    "X-Title": "IdeaFlow",
 }
 // DEFAULT FEATURES
 const TEMPERATURE  = 0.3;

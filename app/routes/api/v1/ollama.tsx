@@ -1,8 +1,8 @@
 // Resource Route for Ollama API
 
 import type {Route} from "./+types/chat";
-import { generate, chat } from "~/api/ollama";
-import {getTask} from "~/api/tasks";
+import { generate, chat } from "~/core/ollama";
+import {getTask} from "~/core/tasks";
 import {replaceUrlsWithContent} from "~/helpers/webUtilsServer";
 export async function action(args:  Route.ActionArgs) {
   console.log(`${args.request.method}:${args.request.url}`);

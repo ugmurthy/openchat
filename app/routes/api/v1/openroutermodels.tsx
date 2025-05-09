@@ -1,7 +1,7 @@
 // RESOURCE ROUTE: to get list of models
 
 import type { Route } from "./+types/openroutermodels";
-import { get_models, } from "~/api/openRouter";
+import { get_models, } from "~/core/openRouter";
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
 

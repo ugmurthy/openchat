@@ -1,9 +1,9 @@
 import type { Route } from "./+types/chat";
-import { chat, get_models,get_supported_params } from "~/api/openRouter";
+import { chat, get_models,get_supported_params } from "~/core/openRouter";
 import { redirect } from 'react-router'
 import { getAuth } from '@clerk/react-router/ssr.server'
 import { Link } from "react-router";
-import {getTask} from "~/api/tasks";
+import {getTask} from "~/core/tasks";
 import { extractTextFromURLOrHTML, replaceUrlsWithContent } from "~/helpers/webUtilsServer";
 
 
