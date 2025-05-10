@@ -1,7 +1,10 @@
 
 
 const BASEURL = 'http://localhost:11434/api/'
-
+const HEADERS = {
+    'Content-Type': 'application/json',
+  
+  }
 // for non streaming requests
 /**
  * Sends a POST request with JSON body and headers to the specified URL.
@@ -13,7 +16,7 @@ const BASEURL = 'http://localhost:11434/api/'
  * @throws {Error} If the response is not OK (200-299).
  * @returns {*} The parsed JSON response from the server.
  */
-export async function fetchJSON(url, body, headers = { 'Content-Type': 'application/json' }) {  
+export async function fetchJSON(url, body, headers = HEADERS) {  
   const options = {
     method: 'POST',
     headers,
@@ -53,7 +56,7 @@ export async function chat(model, messages, stream = false) {
     
     const response = await fetch(BASEURL + url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: HEADERS,
       body
     });
     console.log("ollama.server->f(chat) returning \n");

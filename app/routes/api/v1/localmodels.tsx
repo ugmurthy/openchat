@@ -22,6 +22,15 @@ import { useLocation } from 'react-router';
   
   } */
 
+    export function headers(_: Route.HeadersArgs) {
+      return {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      };
+    }
+
+    
 
   export async function clientLoader({
     params,
@@ -87,7 +96,7 @@ export default function ClientSideRoute({loaderData}: Route.ComponentProps) {
           <pre className=" text-green-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>
 
               <pre className=" text-blue-600 text-sm font-thin">{JSON.stringify(models,null,2)}</pre>
-              <pre className=" text-green-600 text-sm font-thin">{chatResponse.message.content}</pre>
+              <pre className=" text-green-600 text-sm font-thin">{chatResponse?.message.content}</pre>
           </div>
     );
 }
