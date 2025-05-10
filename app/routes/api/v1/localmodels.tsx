@@ -4,7 +4,9 @@ import type { Route } from "./+types/localmodels";
 // import { redirect } from 'react-router'
 // import { getAuth } from '@clerk/react-router/ssr.server'
 // import { Link } from "react-router";
-import { get_model_names } from "~/core/ollama.client";
+import { get_model_names, chat } from "~/core/ollama.client";
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router';
 
 /* export async function loader(args: Route.LoaderArgs) {
   // Use `getAuth()` to get the user's ID
@@ -40,13 +42,52 @@ import { get_model_names } from "~/core/ollama.client";
     return <p className="p-20 text-center text-2xl text-blue-600 font-bold">Fetching.... </p>;
   }
 
-  export default function models({
+  /* export default function models({
     loaderData,
   }: Route.ComponentProps) {
     const users = loaderData;
+
+  }  //
+  */
+
+export default function ClientSideRoute({loaderData}: Route.ComponentProps) {
+  const location = useLocation();
+  const [models, setModels] = useState<string[]>([]);
+  const [chatResponse, setChatResponse] = useState<string | null>(null);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // const response = await fetch('http://localhost:11434/api/tags');
+        // if (!response.ok) throw new Error('Network response was not ok');
+        // const data = await response.json();
+        // const models = data.models.map((model: { name: string }) => model.name);
+        const models = await get_model_names();
+        setModels(models);
+        console.log(models);
+        const messages = [{role:"system",content:"you are a helpful assistant"},{role: "user", content: "Hello, how can u help me?"}]
+        const chat_response = await chat("llama3.2",messages,false);
+        setChatResponse(chat_response);
+
+      } catch (error) {
+        console.error('Fetch error:', error);
+      }
+    }
+
+    // Only run on specific routes
+    if (location.pathname === '/api/v1/localmodels') {
+      fetchData();
+    }
+  }, [location.pathname]);
+
+    //
+
     return (
       <div className="m-4 rounded-lg p-10 bg-slate-100">
-              <pre className=" text-blue-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>
+          <h1 className="text-2xl font-bold text-blue-600">Models</h1>
+          <pre className=" text-green-600 text-sm font-thin">{JSON.stringify(loaderData,null,2)}</pre>
+
+              <pre className=" text-blue-600 text-sm font-thin">{JSON.stringify(models,null,2)}</pre>
+              <pre className=" text-green-600 text-sm font-thin">{chatResponse.message.content}</pre>
           </div>
     );
-  }
+}
