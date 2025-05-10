@@ -276,7 +276,7 @@ useEffect(()=>{
         
         <div ref={divRef} className="btn btn-circle"><NotebookPen /></div>
        <div className="relative h-screen ">
-          <div className="px-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full">
+          <div className="px-10 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full  max-w-7xl">
           <Prompt url="/chat"></Prompt>
           </div>
       </div>

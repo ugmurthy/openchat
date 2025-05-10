@@ -6,6 +6,8 @@ const Prompt = ({url}) => {
   const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
   const [isTaskPickerOpen, setIsTaskPickerOpen] = useState(false);
+  const taskButtonRef = useRef(null);
+  const taskDropdownRef = useRef(null);
   
   // Define available tasks
   const [availableTasks, setAvailableTasks] = useState([
@@ -22,6 +24,70 @@ const Prompt = ({url}) => {
 
   // Tasks that have been selected
   const [selectedTasks, setSelectedTasks] = useState([]);
+  // State to track dropdown position
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0
+  });
+
+  useEffect(() => {
+    // Function to position the dropdown
+    const positionDropdown = () => {
+      if (taskButtonRef.current && isTaskPickerOpen) {
+        // Get the button's dimensions and position
+        const buttonRect = taskButtonRef.current.getBoundingClientRect();
+        
+        // Calculate the center point of the screen
+        const screenCenterX = window.innerWidth / 2;
+        
+        // Set preferred width (300px or match button width up to a max)
+        const dropdownWidth = Math.min(Math.max(buttonRect.width, 300), window.innerWidth - 40);
+        
+        // Calculate left position to center the dropdown
+        const left = screenCenterX - (dropdownWidth / 2);
+        
+        // Make sure dropdown doesn't go off-screen
+        const adjustedLeft = Math.max(20, Math.min(left, window.innerWidth - dropdownWidth - 20));
+        
+        // Set the position values
+        setDropdownPosition({
+          top: buttonRect.bottom + window.scrollY + 5, // 5px gap below button
+          left: adjustedLeft,
+          width: dropdownWidth
+        });
+      }
+    };
+
+    // Position when opened
+    if (isTaskPickerOpen) {
+      positionDropdown();
+    }
+
+    // Reposition on window resize
+    window.addEventListener('resize', positionDropdown);
+    return () => {
+      window.removeEventListener('resize', positionDropdown);
+    };
+  }, [isTaskPickerOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isTaskPickerOpen && 
+          taskDropdownRef.current && 
+          !taskDropdownRef.current.contains(event.target) &&
+          taskButtonRef.current && 
+          !taskButtonRef.current.contains(event.target)) {
+        setIsTaskPickerOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isTaskPickerOpen]);
 
   const handleFileInputChange = (e) => {
     if (e.target.files.length > 0) {
@@ -40,23 +106,21 @@ const Prompt = ({url}) => {
 
   // Toggle task selection
   const toggleTask = (task) => {
-    setSelectedTasks(prev => {
-      if (prev.some(t => t.id === task.id)) {
-        // Remove task if already selected
-        setAvailableTasks(currentAvailable => [...currentAvailable, task].sort((a, b) => parseInt(a.id.split('-')[1]) - parseInt(b.id.split('-')[1])));
-        return prev.filter(t => t.id !== task.id);
-      } else {
-        // Add task if not selected
-        setAvailableTasks(currentAvailable => currentAvailable.filter(t => t.id !== task.id));
-        return [...prev, task];
-      }
-    });
+    if (selectedTasks.some(t => t.id === task.id)) {
+      // Remove task if already selected
+      setSelectedTasks(prev => prev.filter(t => t.id !== task.id));
+      setAvailableTasks(prev => [...prev, task]);
+    } else {
+      // Add task if not selected
+      setSelectedTasks(prev => [...prev, task]);
+      setAvailableTasks(prev => prev.filter(t => t.id !== task.id));
+    }
   };
 
   // Remove a task from selected
   const handleRemoveTask = (task) => {
     setSelectedTasks(prev => prev.filter(t => t.id !== task.id));
-    setAvailableTasks(currentAvailable => [...currentAvailable, task].sort((a, b) => parseInt(a.id.split('-')[1]) - parseInt(b.id.split('-')[1])));
+    setAvailableTasks(prev => [...prev, task]);
   };
   
   // Function to handle form submission
@@ -70,9 +134,6 @@ const Prompt = ({url}) => {
         console.log(pair[0], pair[1]);
       }
     }
-    // To prevent actual form submission if url is not a real endpoint during example usage:
-    // e.preventDefault(); 
-    // console.log("Form submission intercepted for demo.");
   };
 
   // Function to simulate Ctrl+C keypress for stopping generation
@@ -85,41 +146,12 @@ const Prompt = ({url}) => {
       cancelable: true
     });
     document.dispatchEvent(event);
-    console.log('Ctrl+C event dispatched (simulated stop)');
   };
 
   // Toggle task picker dropdown
   const toggleTaskPicker = () => {
     setIsTaskPickerOpen(!isTaskPickerOpen);
   };
-
-  // Close dropdown if clicked outside
-    const taskPickerRef = useRef(null);
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (taskPickerRef.current && !taskPickerRef.current.contains(event.target)) {
-                // Check if the click was on the toggle button itself
-                // This requires a ref on the button or a more specific check
-                // For simplicity, if you click outside the dropdown area, it closes.
-                // The toggle button will handle its own open/close logic.
-                const  buttonOpensDropdown = event.target.closest('button[aria-label="Toggle Task Picker"]');
-                if(!buttonOpensDropdown) {
-                    setIsTaskPickerOpen(false);
-                }
-            }
-        };
-
-        if (isTaskPickerOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        } else {
-            document.removeEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isTaskPickerOpen]);
-
 
   return (
     <div className="w-full mx-auto rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4 shadow-sm">
@@ -129,57 +161,61 @@ const Prompt = ({url}) => {
           <input 
             key={`task-input-${task.id}`}
             type="hidden" 
-            name={`task[${index}]`} // Ensure name format is backend-compatible, e.g., tasks[] or task_values[]
+            name={`task[${index}]`}
             value={task.value} 
           />
         ))}
         
         <div className="relative flex flex-col w-full">
-          {/* Task selector button and dropdown container */}
-          <div className="relative" ref={taskPickerRef}>
-            <button
-              type="button"
-              onClick={toggleTaskPicker}
-              aria-label="Toggle Task Picker" 
-              className="flex items-center justify-between w-full px-3 py-2 mb-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          {/* Task selector button */}
+          <button
+            type="button"
+            ref={taskButtonRef}
+            onClick={toggleTaskPicker}
+            className="flex items-center justify-between w-full px-3 py-2 mb-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <span className="text-gray-700">
+              {selectedTasks.length > 0 ? `${selectedTasks.length} Task${selectedTasks.length > 1 ? 's' : ''} Selected` : 'Select Tasks'}
+            </span>
+            {isTaskPickerOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+
+          {/* Task picker dropdown - positioned fixed */}
+          {isTaskPickerOpen && (
+            <div 
+              ref={taskDropdownRef}
+              style={{
+                position: 'fixed',
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+                zIndex: 10
+              }}
+              className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
             >
-              <span className="text-gray-700">
-                {selectedTasks.length > 0 ? `${selectedTasks.length} Task${selectedTasks.length > 1 ? 's' : ''} Selected` : 'Select Tasks'}
-              </span>
-              {isTaskPickerOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-
-            {/* Task picker dropdown - MODIFIED FOR UPWARD OPENING */}
-            {isTaskPickerOpen && (
-              <div 
-                className="absolute bottom-full left-0 right-0 z-20 mb-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-              >
-                <div className="p-2 text-xs text-gray-500 border-b">Available Tasks</div>
-                {availableTasks.map((task) => (
-                  <div 
-                    key={task.id} 
-                    className="flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => toggleTask(task)}
-                  >
-                    <span className="text-sm text-gray-700">{task.label}</span>
-                    {/* Optionally show a checkmark if it's available for re-selection or something similar */}
-                  </div>
-                ))}
-                
-                {availableTasks.length === 0 && (
-                  <div className="p-2 text-sm text-gray-500 italic">No more tasks available</div>
-                )}
-              </div>
-            )}
-          </div> {/* End of relative container for button and dropdown */}
-
+              <div className="p-2 text-xs text-gray-500 border-b">Available Tasks</div>
+              {availableTasks.map((task) => (
+                <div 
+                  key={task.id} 
+                  className="flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => toggleTask(task)}
+                >
+                  <span className="text-sm text-gray-700">{task.label}</span>
+                </div>
+              ))}
+              
+              {availableTasks.length === 0 && (
+                <div className="p-2 text-sm text-gray-500 italic">No more tasks available</div>
+              )}
+            </div>
+          )}
 
           {/* Selected tasks pills */}
           {selectedTasks.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {selectedTasks.map((task) => (
                 <div 
-                  key={`selected-${task.id}`} 
+                  key={task.id} 
                   className="flex items-center bg-blue-100 rounded-full px-3 py-1"
                 >
                   <span className="text-xs text-blue-700">{task.label}</span>
@@ -187,7 +223,6 @@ const Prompt = ({url}) => {
                     type="button"
                     onClick={() => handleRemoveTask(task)}
                     className="ml-1 text-blue-500 hover:text-blue-700"
-                    aria-label={`Remove task ${task.label}`}
                   >
                     <X size={14} />
                   </button>
@@ -215,7 +250,6 @@ const Prompt = ({url}) => {
                     type="button"
                     onClick={() => removeFile(index)}
                     className="ml-1 text-gray-500 hover:text-gray-700"
-                    aria-label={`Remove file ${file.name}`}
                   >
                     <X size={14} />
                   </button>
@@ -236,7 +270,7 @@ const Prompt = ({url}) => {
                   onChange={handleFileInputChange}
                   className="hidden"
                   multiple
-                  name="attachments" // Make sure backend can handle multiple files with this name
+                  name="attachments"
                 />
                 
                 {/* Clip button */}
@@ -244,7 +278,6 @@ const Prompt = ({url}) => {
                   type="button"
                   onClick={handleFileButtonClick}
                   className="p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Attach files"
                 >
                   <Paperclip size={18} className="text-gray-400" />
                 </button>
@@ -253,7 +286,6 @@ const Prompt = ({url}) => {
                 <button
                   type="button"
                   className="flex items-center p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Deep Search"
                 >
                   <Search size={18} className="text-gray-500" />
                   <span className="text-xs text-gray-700 ml-1 hidden md:inline">DeepSearch</span>
@@ -263,7 +295,6 @@ const Prompt = ({url}) => {
                 <button
                   type="button"
                   className="p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Edit"
                 >
                   <Pencil size={18} className="text-gray-500" />
                 </button>
@@ -276,19 +307,17 @@ const Prompt = ({url}) => {
                   type="button"
                   onClick={handleStopClick}
                   className="p-2 sm:p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors"
-                  aria-label="Stop generation"
                 >
-                  <Square size={16} className="text-white" /> {/* Removed sm={20} as it's not a standard prop for lucide-react icons */}
+                  <Square size={16} className="text-white" />
                 </button>
                 
                 {/* Send Button */}
                 <button
                   type="submit"
-                  className="p-2 sm:p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!text.trim() && files.length === 0 && selectedTasks.length === 0} // Also disable if no tasks selected and other fields empty
-                  aria-label="Send prompt"
+                  className="p-2 sm:p-3 rounded-full bg-gray-500 hover:bg-gray-900 transition-colors"
+                  disabled={!text.trim() && files.length === 0}
                 >
-                  <ArrowUp size={16} className="text-white" /> {/* Removed sm={20} */}
+                  <ArrowUp size={16} className="text-white" />
                 </button>
               </div>
             </div>
