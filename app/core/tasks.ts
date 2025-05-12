@@ -17,5 +17,5 @@ export function getModel (task:string):object|null {
     if (!taskFound) {
         return null
     }
-    return {model:taskFound.model,local:taskFound.local}
+    return {model:taskFound.model,description:taskFound.description,local:taskFound.local}
 }

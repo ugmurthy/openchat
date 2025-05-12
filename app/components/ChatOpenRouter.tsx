@@ -62,14 +62,17 @@ function getContent(jsonArray:[]) {
 
 let toBeRun = true;
 
-export default function ChatComponent({prompt,model,task,update,cls="max-w-5xl mx-auto",textColor="text-blue-900",showStats=false}) {
+export default function ChatComponent({local,messages,prompt,model,task,update,cls="max-w-5xl mx-auto",textColor="text-blue-900",showStats=false}) {
     
 
-
+    const url = "/api/v1/chat"
     const [responseData,openRouterError,isLoading,isConnected,abort] = useOpenRouter(
+        messages,
         prompt,
         model,
         task,
+        url,
+        true
        // default url=BASE_URL
        // defaule debug=false
     )

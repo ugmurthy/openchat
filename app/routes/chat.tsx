@@ -13,7 +13,7 @@ import Tablist from "~/components/Tablist";
 import CustomDBExample from "~/components/CustomDBExamplex";
 import { Message } from "~/db/openRouterTypes";
 import { NotebookPen } from "lucide-react";
-import { is } from "node_modules/cheerio/dist/esm/api/traversing";
+import { replaceUrlsWithContent } from "~/helpers/webUtilsServer";
 export const handle = {
   ssr: false, // Disable SSR for this route
 };
@@ -39,17 +39,29 @@ export async function action(args: Route.ActionArgs) {
   console.log(`${args.request.method}:${args.request.url}`);
   const formData = await args.request.formData();
   const datajson = Object.fromEntries(formData.entries());
-  const prompt = datajson.inputText;
+  let prompt = datajson.inputText;
   console.log("formData: ",datajson);
 
   // There could be multiple tasks, so we need to check for the first one
   const task = datajson['task[0]']!==undefined?datajson['task[0]']:"";
   //const model = "google/gemini-flash-1.5-8b-exp"
   //const model = "google/gemini-2.5-pro-exp-03-25:free"
-  const {model,local} = getModel(task);
-  //const model = "google/gemini-2.0-flash-thinking-exp-1219:free"
+  
+  // GET MODEL, SYSTEM PROMPT AND LOCAL
+  const task_record = await getModel(task as string);
+  let model, description, local;
+  if (task_record) {
+    model = task_record.model;
+    description = task_record.description;
+    local = task_record.local;
+  } else {
+    // fallback to default model @TODO: add a default model in settings
+    model = "google/gemini-2.5-pro-exp-03-25:free";
+    description = "You are a helpful assistant";
+    local = false;
+  }
 
-  //const model = "llama3.2"
+
   /// check for attachments
   const attachments = formData.getAll("attachments");
 
@@ -68,9 +80,21 @@ export async function action(args: Route.ActionArgs) {
   } else {
     console.log("no attachments");
   }
+  // @TODO: Incorporate attachments into the prompt
 
+  // @TODO: check if prompt contains urls
+  const text = await replaceUrlsWithContent(prompt as string);
+  if (text) {
+     prompt = text;
+  }
+  
+  // Assemble the messages for the LLM API
+  const messages = [
+    { role: "system", content: description },
+    { role: "user", content: prompt }
+  ]
   console.log(`${args.request.method}:${args.request.url} : `,{model:model,task:task,local:local,prompt:prompt, userId:userId})
-  return {model:model,task:task,local:local,prompt:prompt, userId:userId};
+  return {messages:messages,model:model,task:task,local:local,prompt:prompt,inputText:datajson.inputText, userId:userId};
 }
 
 
@@ -92,11 +116,15 @@ let didNotRun=true;
 
 export default function Component({loaderData,actionData,params,matches}: Route.ComponentProps) {
   const data = actionData;
+  const messages = data?.messages || [];
+  
+  console.log("Component:actionData",data);
   const task = data?.task || "";
   const local = data?.local || false;
   const model = data?.model || "";
   const prompt = data?.prompt || "";
   const userId = data?.userId || "";
+  const inputText = data?.inputText || "";
   //console.log("Component:actionData",data);
   // updated by chatComponent
   const [messageAndError,setMessageAndError]=useState([[],null,[],null]); // message,usage,responseJSON an array of all response lines, chatError
@@ -259,20 +287,23 @@ useEffect(()=>{
 
   return (
     <div ref={outerRef} className="m-4 rounded-lg p-10 bg-blue-50 ">
+       {model && <pre className='text-xs font-thin text-gray-500'>{task} using {model}</pre>}
         {prompt && 
+
+                  
                   <div className="p-2 rounded-lg justify-end text-gray-500 bg-gray-50 max-w-4xl">
-                          <MarkDownRenderer markdown={prompt} 
+                          <MarkDownRenderer markdown={inputText} 
                                           className={"max-w-5xl"} // Additional Tailwind classes
                                           fontSize="text-sm"
                                           fontFamily="font-sans"
                                           textColor={"text-gray-500"}/>
                   </div>}
                   {/* Local=false Implies use OpenRouter component*/} 
-                  {prompt && !local &&
-                  <ChatComponent prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatComponent>}
+                  {prompt && !local && messages.length>0 &&
+                  <ChatComponent local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatComponent>}
                   {/*LOCAL MODEL implies use ChatOllama component*/}
-                  {prompt && local &&
-                  <ChatOllama prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatOllama>}
+                  {prompt && local &&  messages.length>0 &&
+                  <ChatOllama local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatOllama>}
         
         <div ref={divRef} className="btn btn-circle"><NotebookPen /></div>
        <div className="relative h-screen ">

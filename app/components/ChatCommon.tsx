@@ -70,14 +70,12 @@ function getContent(jsonArray:[]) {
 
 let toBeRun = true;
 
-export default function ChatOllama({local,messages,prompt,model,task,update,cls="max-w-5xl mx-auto",textColor="text-green-900",showStats=false}) {
+export default function ChatOllama({prompt,model,task,update,cls="max-w-5xl mx-auto",textColor="text-green-900",showStats=false}) {
     
 
-    //const url = "/api/v1/ollama"
-    const url = "http://localhost:11434/api/chat"
+    const url = "/api/v1/ollama"
+    
     const [responseData,openRouterError,isLoading,isConnected,abort] = useOpenRouter(
-        
-        messages,
         prompt,
         model,
         task,
@@ -85,6 +83,7 @@ export default function ChatOllama({local,messages,prompt,model,task,update,cls=
         true
     ) 
 
+    //console.log("ChatComponent: responseData: ",prompt,model,task);
     // CTRL-C to abort streaming
     useEffect(() => {
         const handleKeyDown = (event:any) => {
@@ -144,7 +143,6 @@ export default function ChatOllama({local,messages,prompt,model,task,update,cls=
 
     return (
         <div>
-          
            <MarkDownRenderer markdown={content} 
                                     className={cls} // Additional Tailwind classes
                                     fontSize="text-sm"

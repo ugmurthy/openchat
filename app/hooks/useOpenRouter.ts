@@ -7,7 +7,7 @@ const BASE_URL='/api/v1/chat';
 var _useOpenRouter_toBeRun = 1;
 
 
-export const useOpenRouter = (prompt:string, model:string,task:string="",url=BASE_URL, debug=false) => {
+export const useOpenRouter = (messages:any,prompt:string, model:string,task:string="",url=BASE_URL, debug=false) => {
     const [data,setData]=useState([])
     const [error,setError]=useState(null);
     
@@ -58,8 +58,8 @@ export const useOpenRouter = (prompt:string, model:string,task:string="",url=BAS
           
           return [content,chatError] 
         }
-
-
+    console.log("useOpenRouter: url ",url);
+    console.log("useOpenRouter: messages ", messages);
     useEffect(() => {
       
         /* if (!_useOpenRouter_toBeRun) {
@@ -81,13 +81,20 @@ export const useOpenRouter = (prompt:string, model:string,task:string="",url=BAS
             //const url = BASE_URL
             
             debug && console.log("fetchStream url",url);
-            
+            //const body = JSON.stringify({ prompt, model, task });
+            const body = JSON.stringify({
+              "model": model,
+              "messages": messages,
+              "temperature": 0.3,
+              "max_tokens": 2048,
+              "stream":true,
+          })
             const response = await fetch(url, {
               method: 'POST',
               headers: {
                 'Accept': 'text/event-stream, application/x-ndjson, application/json',
               },
-              body: JSON.stringify({ prompt, model, task }),
+              body,
               signal,
             });
             console.log("useOpenRouter: fetchStream response",response);

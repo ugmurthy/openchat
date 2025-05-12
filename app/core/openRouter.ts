@@ -61,7 +61,7 @@ export async function model_exists(model) {
 }
 
 // chat with a model
-export async function chat(features,messages,stream=STREAM) {
+export async function old_chat(features,messages,stream=STREAM) {
     // features is a object containing model parameters and model
     // features = {model,temperature,max_tokens,...}
     // messages is [{role: "user", content: "message"}]
@@ -96,6 +96,26 @@ export async function chat(features,messages,stream=STREAM) {
     //     headers:{'Content-type':'text/event-stream'}
     //   });
     console.log("f(chat): returning response");
+    return response;
+}
+
+// chat with a model
+export async function chat(body:any,stream=STREAM) {
+    console.log("f(new_chat): body",body.model,body.temperature,body.max_tokens);
+    // check if model exists
+    const model_exists_flag = await model_exists(body.model);
+    if (!model_exists_flag) {
+        console.log("f(new_chat): model does not exist",body.model);
+        throw new Error("Model does not exist");
+    }
+    const options = {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify(body),
+        signal:signal, 
+    }
+    const response = await fetch(OPENROUTER_BASE_URL+"chat/completions", options);
+    console.log("f(new_chat): returning response");
     return response;
 }
 // Given id of generation, get stats
