@@ -1,65 +1,111 @@
 import {useState, useEffect, useRef} from 'react';
 import _ from 'lodash';
+import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 
 // set this url to the url that provides the stream
 const BASE_URL='/api/v1/chat';
 
-var _useOpenRouter_toBeRun = 1;
+//var _useOpenRouter_toBeRun = 1;
 
 
 export const useOpenRouter = (messages:any,prompt:string, model:string,task:string="",url=BASE_URL, debug=false) => {
+    // array of json strings : for ndjson
     const [data,setData]=useState([])
     const [error,setError]=useState(null);
-    
+    const [done,setDone]=useState(false);
     const abortControllerRef = useRef(null);
-    const [isLoading, setIsLoading] = useState(false);
+    //const [isLoading, setIsLoading] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
-    const [usage, setUsage] = useState("");
-    const [text, setText] = useState("");
+
     const [contentType, setContentType] = useState("");
 
-        function parseStreamData(dataArray:string[]) {
-          return dataArray
-              .filter(d => d.startsWith('data: '))
-              .map(d => {
-                  // Remove 'data: ' prefix and parse the JSON
-                  //console.log("ChatComponent:f(parseStreamData): d: ",d)
-                  const jsonString = d.substring(6);
-                  try {
-                      if (jsonString === '[DONE]') {
-                          return null; // Handle end of stream
-                      }
-                      // Parse the JSON string
-                      return JSON.parse(jsonString);
-                  } catch (error) {
-                      console.error('Error parsing JSON:', error);
-                      return null;
-                  }
-              })
-              .filter(item => item !== null); // Remove any failed parses
-        }
 
-        function getContent(jsonArray:[]) {
-          // convert json array to content, error if present
-          if (jsonArray.length===0) return ["",null];
-          let chatError=null
-          let content=""
-          
-          for (const item of jsonArray) {
-              if (Object.keys(item).includes("error")) {
-                  chatError=item
-              } else {
-                if (Object.keys(item).includes("usage")) {
-                    setUsage(item);
-                }
-                content=content + item.choices[0]?.delta.content
+    function parseNDjson(dataArray:string[]) {
+      return dataArray
+          .map(d => {
+              // Remove 'data: ' prefix and parse the JSON
+              //console.log("ChatComponent:f(parseStreamData): d: ",d)
+              //const jsonString = d.substring(6);
+              try {
+                  //if (jsonString === '[DONE]') {
+                  //    return null; // Handle end of stream
+                  //}
+                  // Parse the JSON string
+                  return JSON.parse(d);
+              } catch (error) {
+                  console.error('Error parsing JSON:', error);
+                  return null;
               }
+          })
+          .filter(item => item !== null); // Remove any failed parses
+  }
+
+
+function getNDjsonContent(jsonArray:[]) {
+  // convert json array to content, error if present
+  if (jsonArray.length===0) return ["",null];
+  let chatError=null
+  let content=""
+  let usage=null;
+  for (const item of jsonArray) {
+      switch (item.done) {
+          case false:
+              content += item.message.content;
+              break;
+          case true:
+              usage = item
+              break;
+          default:
+              console.log("ChatComponent:f(getContent): default: ",item)
+              break;
+      }
+      
+  }
+  
+  return [content,usage] 
+}
+
+
+function parseStreamData(dataArray:string[]) {
+  return dataArray
+      .filter(d => d.startsWith('data: '))
+      .map(d => {
+          // Remove 'data: ' prefix and parse the JSON
+          //console.log("ChatComponent:f(parseStreamData): d: ",d)
+          const jsonString = d.substring(6);
+          try {
+              if (jsonString === '[DONE]') {
+                  return null; // Handle end of stream
+              }
+              // Parse the JSON string
+              return JSON.parse(jsonString);
+          } catch (error) {
+              console.error('Error parsing JSON:', error);
+              return null;
           }
-          
-          return [content,chatError] 
-        }
-    console.log("useOpenRouter: url ",url);
-    console.log("useOpenRouter: messages ", messages);
+      })
+      .filter(item => item !== null); // Remove any failed parses
+}
+
+function getStreamContent(jsonArray:[]) {
+  // convert json array to content, error if present
+  if (jsonArray.length===0) return ["",null];
+  let chatError=null
+  let content=""
+  
+  for (const item of jsonArray) {
+      if (Object.keys(item).includes("error")) {
+          chatError=item
+      } else {
+         content=content + item.choices[0]?.delta.content
+      }
+  }
+  
+  return [content,chatError] 
+}
+
+
+
     useEffect(() => {
       
         /* if (!_useOpenRouter_toBeRun) {
@@ -67,8 +113,8 @@ export const useOpenRouter = (messages:any,prompt:string, model:string,task:stri
         }
         _useOpenRouter_toBeRun=false; */
 
-        console.log("useOpenRouter: useEffect", _useOpenRouter_toBeRun);
-        _useOpenRouter_toBeRun+=1;
+        //console.log("useOpenRouter: useEffect", _useOpenRouter_toBeRun);
+        //_useOpenRouter_toBeRun+=1;
 
         // Create abort controller for fetch
         abortControllerRef.current = new AbortController();
@@ -117,6 +163,9 @@ export const useOpenRouter = (messages:any,prompt:string, model:string,task:stri
               const { done, value } = await reader.read();
               if (done) {
                 console.log('Stream finished');
+                setDone(true);
+                setIsConnected(false);
+                //setIsLoading(false);
                 break;
               }
     
@@ -133,6 +182,7 @@ export const useOpenRouter = (messages:any,prompt:string, model:string,task:stri
             }
           } catch (err) {
             if (err?.name === 'AbortError') {
+              //setError('Chat aborted');
               console.log('Fetch aborted', err);
               
             } else {
@@ -165,12 +215,29 @@ export const useOpenRouter = (messages:any,prompt:string, model:string,task:stri
         if (abortControllerRef.current) {
           abortControllerRef.current.abort();
           setIsConnected(false);
-          setIsLoading(false);
+          //setIsLoading(false);
         }
       }
       
-
-      return [compactData,error, isLoading, isConnected,abort]
+      let content = null
+      let usage=null
+      let chaterror=null;
+      if (contentType === 'application/x-ndjson') {
+        [content, usage] = getNDjsonContent(parseNDjson(compactData));
+        //debug&&console.log("useOpenRouter: NDJSON content \n------\n",content,'\n------\n',usage,'\n------\n');
+        
+      }
+      if (contentType === 'text/event-stream') {
+        [content, chaterror] = getStreamContent(parseStreamData(compactData));
+        let lastString = done && compactData[compactData.length-2].substring(6);
+        usage = done && JSON.parse(lastString)
+        //debug&&console.log("useOpenRouter: text/event-stream content \n------\n",content,'\n------\n',usage,'\n------\n');
+       
+      }
+      console.log("useOpenRouter: \n------\n",content,'\n------\n',usage,'\n------\n');
+      let isLoading = compactData.length === 0 && !done;
+      return [content,chaterror,isLoading,usage,abort]
+      //return [compactData,error, isLoading, isConnected,abort]
 }            
 
 export default useOpenRouter;

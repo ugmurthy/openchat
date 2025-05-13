@@ -17,6 +17,7 @@ import DownLoadmd from "~/components/DownLoadmd";
 import Memory from "~/components/Memory"
 import {extractFilename} from "~/helpers/webUtilsServer"
 import {Message} from "~/db/openRouterTypes"
+import { is } from 'node_modules/cheerio/dist/esm/api/traversing';
 /*
 sample error object: this is returned when the rate limit is exceeded : return value of function parseStreamData.
 {"error":{"message":"Rate limit exceeded: limit_rpd/google/gemini-2.0-flash-thinking-exp-01-21/54276bca-abd7-4aa6-a6b5-1b8f898f1395","code":429,"metadata":{"headers":{"X-RateLimit-Limit":"80","X-RateLimit-Remaining":"0","X-RateLimit-Reset":"1743638400000"},"provider_name":"Google AI Studio"}},"user_id":"user_2mBdBPxBH7eLf6NvkErkltzOCzu"}
@@ -105,7 +106,8 @@ export default function ChatComponent({local,messages,prompt,model,task,update,c
 
     if (openRouterError) return <pre>Error: {JSON.stringify(openRouterError,null,2)}</pre>
     //const idArray = Array.from(idSet);
-    if (!responseData) return <div>Loading...</div>
+    //if (!responseData) return <div>Loading...</div>
+    
     //const promptStr = prompt.length>100?prompt.slice(0,100)+'...':prompt;
     
     const responseJSON = parseStreamData(responseData )
@@ -134,7 +136,9 @@ export default function ChatComponent({local,messages,prompt,model,task,update,c
 
     return (
         <div>
-           
+           {isLoading && <div className='text-center text-sm font-mono font-thin'>
+            <span className='loading loading-spinner text-gray-500 loading-xl py-20'></span>
+            </div>}
            <div className="p-4 text-sm ">
             {/*responseJSON.map((message, index) => (<div>{JSON.stringify(message)}</div>))*/}
             <MarkDownRenderer markdown={content} 

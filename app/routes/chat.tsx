@@ -6,7 +6,7 @@ import { getAuth } from '@clerk/react-router/ssr.server'
 import { useEffect, useState, useRef } from "react";
 import indexedDBService from "~/db/indexedDBService3.client";
 import useIndexedDB from "~/hooks/useIndexedDB5";
-import ChatComponent from "~/components/ChatOpenRouter";
+import ChatCommon from "~/components/ChatCommon";
 import ChatOllama from "~/components/ChatOllama";
 import MarkDownRenderer from '~/components/MarkDownIt';
 import Tablist from "~/components/Tablist";
@@ -14,6 +14,8 @@ import CustomDBExample from "~/components/CustomDBExamplex";
 import { Message } from "~/db/openRouterTypes";
 import { NotebookPen } from "lucide-react";
 import { replaceUrlsWithContent } from "~/helpers/webUtilsServer";
+import { useModels } from "~/hooks/useModels";
+
 export const handle = {
   ssr: false, // Disable SSR for this route
 };
@@ -29,8 +31,7 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 export async function action(args: Route.ActionArgs) {
-  // Use `getAuth()` to get the user's ID
-  
+  // Authenticate the user
   const { userId } = await getAuth(args);
   if (!userId) {
     return redirect('/sign-in?redirect_url=' + args.request.url)
@@ -40,12 +41,10 @@ export async function action(args: Route.ActionArgs) {
   const formData = await args.request.formData();
   const datajson = Object.fromEntries(formData.entries());
   let prompt = datajson.inputText;
-  console.log("formData: ",datajson);
+  //console.log("formData: ",datajson);
 
   // There could be multiple tasks, so we need to check for the first one
   const task = datajson['task[0]']!==undefined?datajson['task[0]']:"";
-  //const model = "google/gemini-flash-1.5-8b-exp"
-  //const model = "google/gemini-2.5-pro-exp-03-25:free"
   
   // GET MODEL, SYSTEM PROMPT AND LOCAL
   const task_record = await getModel(task as string);
@@ -81,13 +80,16 @@ export async function action(args: Route.ActionArgs) {
     console.log("no attachments");
   }
   // @TODO: Incorporate attachments into the prompt
+  // @TODO: deal with images,txt, md, pdf, docx, jsx, csv, json, html
 
   // @TODO: check if prompt contains urls
+  // @TODO: Think about replace first level urls in the prompt with text
   const text = await replaceUrlsWithContent(prompt as string);
   if (text) {
      prompt = text;
   }
   
+  // @TODO deal with tools from MCP
   // Assemble the messages for the LLM API
   const messages = [
     { role: "system", content: description },
@@ -117,150 +119,151 @@ let didNotRun=true;
 export default function Component({loaderData,actionData,params,matches}: Route.ComponentProps) {
   const data = actionData;
   const messages = data?.messages || [];
-  
-  console.log("Component:actionData",data);
+
   const task = data?.task || "";
   const local = data?.local || false;
   const model = data?.model || "";
   const prompt = data?.prompt || "";
   const userId = data?.userId || "";
   const inputText = data?.inputText || "";
-  //console.log("Component:actionData",data);
-  // updated by chatComponent
-  const [messageAndError,setMessageAndError]=useState([[],null,[],null]); // message,usage,responseJSON an array of all response lines, chatError
-  const noMessage = messageAndError[0]?.length===0?true:false;
-  const [newConversaton,setNewConversation]=useState(true); // whenever component mounts 
-  const divRef = useRef<HTMLDivElement>(null);
-  const outerRef = useRef<HTMLDivElement>(null);
-  //update from child component
-  const updateMessageAndError = (newData)=> {
-    setMessageAndError(newData);
-  }
+
+  const {models,isLoadingModel,modelError} = useModels("http://localhost:11434/v1/models");
+  //const {models,isLoadingModel,modelError} = useModels("https://openrouter.ai/api/v1/models");
+  console.log("Models: data: ",models,isLoadingModel,modelError);
+   const [messageAndError,setMessageAndError]=useState([[],null,[],null]); // message,usage,responseJSON an array of all response lines, chatError
+  // const noMessage = messageAndError[0]?.length===0?true:false;
+  // const [newConversaton,setNewConversation]=useState(true); // whenever component mounts 
+   const divRef = useRef<HTMLDivElement>(null);
+   const outerRef = useRef<HTMLDivElement>(null);
+  // //update from child component
+   const updateMessageAndError = (newData)=> {
+     setMessageAndError(newData);
+   }
   
-  // Use our custom DB service with the hook
-  const {
-    items,
-    loading,
-    error,
-    save,
-    findByRange,
-    findRecent,
-    getById,
-    find,
-    remove,
-    update,
-    clear
-} = useIndexedDB(CHAT_ENTITY_TYPES.CHAT, indexedDBService);
+//   // Use our custom DB service with the hook
+//   const {
+//     items,
+//     loading,
+//     error,
+//     save,
+//     findByRange,
+//     findRecent,
+//     getById,
+//     find,
+//     remove,
+//     update,
+//     clear
+// } = useIndexedDB(CHAT_ENTITY_TYPES.CHAT, indexedDBService);
 
-// saves 'memory' , 'conversations' or 'settings'
-const saveData = async (title:Title,data:GenericJsonObject) => {
-  const record = {
-    id: `${Date.now()}`,
-    title: `${title}`,
-    data: data,
-  };
+// // saves 'memory' , 'conversations' or 'settings'
+// const saveData = async (title:Title,data:GenericJsonObject) => {
+//   const record = {
+//     id: `${Date.now()}`,
+//     title: `${title}`,
+//     data: data,
+//   };
   
-  await save(record);
-};
+//   await save(record);
+// };
 
-const saveConversation = async(data:Message,usage:GenericJsonObject ,title='conversations') => {
-  // create a conversation id if needed and save conversation
-  let id = null
-  if (newConversaton) {
-    const record = {
-      id: `${Date.now()}`,
-      title: `${title}`,
-      data: data,
-      usage:usage,
-    };
-    setNewConversation(false);
-    const ret_val = await save(record);
-    //console.log("id :", record.id)
-    //console.log("ret_val :",JSON.stringify(ret_val,null,2))
-    return ret_val
-  } else {
-    // get existing conversation based on conversationID
-    let prevData = await getById(conversationID);
-    if (prevData) {
-      // add the data to existing data
-      const updatedData = [...prevData?.data,...data]
-      // update conversation
-      const ret_val = await update(conversationID,)
-      return ret_val
-    }
-  }
-}
+// const saveConversation = async(data:Message,usage:GenericJsonObject ,title='conversations') => {
+//   // create a conversation id if needed and save conversation
+//   let id = null
+//   if (newConversaton) {
+//     const record = {
+//       id: `${Date.now()}`,
+//       title: `${title}`,
+//       data: data,
+//       usage:usage,
+//     };
+//     setNewConversation(false);
+//     const ret_val = await save(record);
+//     //console.log("id :", record.id)
+//     //console.log("ret_val :",JSON.stringify(ret_val,null,2))
+//     return ret_val
+//   } else {
+//     // get existing conversation based on conversationID
+//     let prevData = await getById(conversationID);
+//     if (prevData) {
+//       // add the data to existing data
+//       const updatedData = [...prevData?.data,...data]
+//       // update conversation
+//       const ret_val = await update(conversationID,)
+//       return ret_val
+//     }
+//   }
+// }
 
-const allItems = (items:any[],noMessage:Boolean) => {
-  if (items.length<2) return <div>Less than 2 items</div>
-  let pru_messages = items.map((i)=>[i.data[0].content,i.data[1].content,i.usage])  /// prompt, generated content, usage stats
-  //const conversationComponent = pru_messages.map((pru)=> <div>pru[0]</div>)
-  pru_messages = noMessage?pru_messages:pru_messages.slice(0,pru_messages.length-1);
-  let comp = pru_messages.map((pru,key)=><><div id={key+"-0"} className="p-2 rounded-lg">
-                                                <MarkDownRenderer markdown={pru[0]} 
-                                          className={"max-w-5xl flex justify-end "} // Additional Tailwind classes
-                                          fontSize="text-sm"
-                                          fontFamily="font-sans"
-                                          textColor={"text-gray-700"}/>
-                                      </div>
+// const allItems = (items:any[],noMessage:Boolean) => {
+//   if (items.length<2) return <div>Less than 2 items</div>
+//   let pru_messages = items.map((i)=>[i.data[0].content,i.data[1].content,i.usage])  /// prompt, generated content, usage stats
+//   //const conversationComponent = pru_messages.map((pru)=> <div>pru[0]</div>)
+//   pru_messages = noMessage?pru_messages:pru_messages.slice(0,pru_messages.length-1);
+//   let comp = pru_messages.map((pru,key)=><><div id={key+"-0"} className="p-2 rounded-lg">
+//                                                 <MarkDownRenderer markdown={pru[0]} 
+//                                           className={"max-w-5xl flex justify-end "} // Additional Tailwind classes
+//                                           fontSize="text-sm"
+//                                           fontFamily="font-sans"
+//                                           textColor={"text-gray-700"}/>
+//                                       </div>
                                     
-                                      <div id={key+"-1"}>
-                                      <MarkDownRenderer markdown={pru[1]} 
-                                          className={"max-w-5xl mx-auto"} // Additional Tailwind classes
-                                          fontSize="text-sm"
-                                          fontFamily="font-sans"
-                                          textColor={"text-blue-800"}/>
-                                      </div>
-                                       </>
+//                                       <div id={key+"-1"}>
+//                                       <MarkDownRenderer markdown={pru[1]} 
+//                                           className={"max-w-5xl mx-auto"} // Additional Tailwind classes
+//                                           fontSize="text-sm"
+//                                           fontFamily="font-sans"
+//                                           textColor={"text-blue-800"}/>
+//                                       </div>
+//                                        </>
                                     
-                                    )      
-  comp = <div>  {comp}
-                {prompt &&
-                  <div className="p-2 rounded-lg justify-end text-gray-500 bg-gray-50 max-w-4xl">
-                          <MarkDownRenderer markdown={prompt} 
-                                          className={"max-w-5xl"} // Additional Tailwind classes
-                                          fontSize="text-sm"
-                                          fontFamily="font-sans"
-                                          textColor={"text-gray-500"}/>
-                  </div>}
+//                                     )      
+//   comp = <div>  {comp}
+//                 {prompt &&
+//                   <div className="p-2 rounded-lg justify-end text-gray-500 bg-gray-50 max-w-4xl">
+//                           <MarkDownRenderer markdown={prompt} 
+//                                           className={"max-w-5xl"} // Additional Tailwind classes
+//                                           fontSize="text-sm"
+//                                           fontFamily="font-sans"
+//                                           textColor={"text-gray-500"}/>
+//                   </div>}
                   
-                {prompt &&
-                  <ChatComponent prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatComponent>}
-          </div>              
-  return comp
+//                 {prompt &&
+//                   <ChatComponent prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatComponent>}
+//           </div>              
+//   return comp
   
-}
-//const [message,usage,responseJSON,chatError] = messageAndError;
-useEffect(()=>{
-    const [message,usage,responseJSON,chatError] = messageAndError;
-    if (chatError===null && didNotRun && message.length==2) {
-        // add message
-        const addit = async()=> {
-            //await saveData('memory',message);
-            await saveConversation(message,usage)
-        }
-        addit();
-        didNotRun=false;
+// }
+// //const [message,usage,responseJSON,chatError] = messageAndError;
+// useEffect(()=>{
+//     const [message,usage,responseJSON,chatError] = messageAndError;
+//     if (chatError===null && didNotRun && message.length==2) {
+//         // add message
+//         const addit = async()=> {
+//             //await saveData('memory',message);
+//             await saveConversation(message,usage)
+//         }
+//         addit();
+//         didNotRun=false;
        
-    }
- },[messageAndError[0]])
+//     }
+//  },[messageAndError[0]])
 
   // set this to true to see all the data passed to this component
   const debug = true;;
-  const tabs = [
-             {name:"Chat",content:allItems(items,noMessage)},
-              {name:"messageAndError",content:<pre>{JSON.stringify(messageAndError,null,2)}</pre>},
-              {name:"responseJSON",content:<pre className="text-xs font-thin text-blue-800">{JSON.stringify(messageAndError[2],null,2)}</pre>},
-              {name:"items",content:<pre className="text-xs font-thin text-blue-500">{items?JSON.stringify(items,null,2):"None"} </pre>},
-              {name:"loaderData",
-              content: <pre className="text-xs font-thin text-red-500">Loader Data: {loaderData?JSON.stringify(loaderData,null,2):"None"}</pre>},
+  // const tabs = [
+  //            {name:"Chat",content:allItems(items,noMessage)},
+  //             {name:"messageAndError",content:<pre>{JSON.stringify(messageAndError,null,2)}</pre>},
+  //             {name:"responseJSON",content:<pre className="text-xs font-thin text-blue-800">{JSON.stringify(messageAndError[2],null,2)}</pre>},
+  //             {name:"items",content:<pre className="text-xs font-thin text-blue-500">{items?JSON.stringify(items,null,2):"None"} </pre>},
+  //             {name:"loaderData",
+  //             content: <pre className="text-xs font-thin text-red-500">Loader Data: {loaderData?JSON.stringify(loaderData,null,2):"None"}</pre>},
   
-              {name:"actionData",
-              content: <pre className="text-xs font-thin text-blue-500">Action Data: {actionData?JSON.stringify(actionData,null,2):"None"}</pre>},
-              {name:"params",
-              content: <pre className="text-xs font-thin text-red-500">Route Parameters: {JSON.stringify(params,null,2)}</pre>},
-              {name:"matches",
-              content: <pre className="text-xs font-thin text-green-500">Matched Routes: {JSON.stringify(matches,null,2)}</pre>},]
+  //             {name:"actionData",
+  //             content: <pre className="text-xs font-thin text-blue-500">Action Data: {actionData?JSON.stringify(actionData,null,2):"None"}</pre>},
+  //             {name:"params",
+  //             content: <pre className="text-xs font-thin text-red-500">Route Parameters: {JSON.stringify(params,null,2)}</pre>},
+  //             {name:"matches",
+  //             content: <pre className="text-xs font-thin text-green-500">Matched Routes: {JSON.stringify(matches,null,2)}</pre>},]
   
   
  useEffect(() => {
@@ -299,11 +302,11 @@ useEffect(()=>{
                                           textColor={"text-gray-500"}/>
                   </div>}
                   {/* Local=false Implies use OpenRouter component*/} 
-                  {prompt && !local && messages.length>0 &&
-                  <ChatComponent local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatComponent>}
+                  {prompt  && messages.length>0 &&
+                  <ChatCommon local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatCommon>}
                   {/*LOCAL MODEL implies use ChatOllama component*/}
-                  {prompt && local &&  messages.length>0 &&
-                  <ChatOllama local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatOllama>}
+                  {/*prompt && local &&  messages.length>0 &&
+                  <ChatOllama local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatOllama>*/}
         
         <div ref={divRef} className="btn btn-circle"><NotebookPen /></div>
        <div className="relative h-screen ">

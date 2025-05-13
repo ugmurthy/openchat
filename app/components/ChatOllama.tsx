@@ -18,6 +18,7 @@ import Memory from "~/components/Memory"
 import {extractFilename} from "~/helpers/webUtilsServer"
 import {Message} from "~/db/openRouterTypes"
 import { get } from 'http';
+import { is } from 'node_modules/cheerio/dist/esm/api/traversing';
 
 /*
 sample error object: this is returned when the rate limit is exceeded : return value of function parseStreamData.
@@ -112,8 +113,8 @@ export default function ChatOllama({local,messages,prompt,model,task,update,cls=
 
     if (openRouterError) return <pre>Error: {JSON.stringify(openRouterError,null,2)}</pre>
     
-    if (responseData.length===0) return <div>Loading...</div>
-    
+    //if (responseData.length===0) return <div>Loading...</div>
+    //if (isLoading) return <div><div className="skeleton h-4 w-full"></div></div>
     ////
     const responseJSON = parseStreamData(responseData )
     const [content,usage]=getContent(responseJSON)
@@ -144,7 +145,9 @@ export default function ChatOllama({local,messages,prompt,model,task,update,cls=
 
     return (
         <div>
-          
+          {isLoading && <div className='text-center text-sm font-mono font-thin'>
+            <span className='loading loading-spinner text-gray-500 loading-xl py-20'></span>
+            </div>}
            <MarkDownRenderer markdown={content} 
                                     className={cls} // Additional Tailwind classes
                                     fontSize="text-sm"
