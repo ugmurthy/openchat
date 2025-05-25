@@ -28,18 +28,18 @@ export default function ChatComponent({local,messages,prompt,model,task,update,c
 
     const url = local? "http://localhost:11434/api/chat":"/api/v1/chat"
     const textColorClass = local ? "text-green-900" : textColor;
-    console.log("ChatCommon->: url: ",url)
+    //console.log("ChatCommon->: url: ",url)
     const [content,error,isLoading,usage,abort] = useOpenRouter(
         messages,
         prompt,
         model,
         task,
         url,
-        true
+        false
        // default url=BASE_URL
        // defaule debug=false
     )
-    console.log("ChatCommon->: content: ",content)
+    //console.log("ChatCommon->: content: ",content)
     //console.log("ChatComponent: responseData: ",prompt,model,task);
     // CTRL-C to abort streaming
     useEffect(() => {
@@ -78,11 +78,11 @@ export default function ChatComponent({local,messages,prompt,model,task,update,c
 
     return (
         <div>
-           {isLoading &&
-            <div className='text-center text-sm font-mono font-thin'>
-                <span className='loading loading-spinner text-gray-500 loading-xl py-20'></span>
-            </div>}
-            
+           {isLoading && <div className='text-center text-sm font-mono font-thin'>
+                            <span className='loading loading-spinner text-gray-500 loading-xl py-20'></span>
+                         </div>}
+
+            {/* Response from LLM - Content */}
             <div className="p-4 text-sm ">
                 <MarkDownRenderer markdown={content??""} 
                                     className={cls} // Additional Tailwind classes
@@ -90,13 +90,14 @@ export default function ChatComponent({local,messages,prompt,model,task,update,c
                                     fontFamily="font-sans"
                                     textColor={textColorClass}/>        
             </div>
-
+            {/* Copy, Download content */}
             <div className='flex flex-row justify-center items-center space-x-2'>
                     {usage&&<CommandCopy txt={content} btnTxt="Copy"></CommandCopy>}
                     {usage&&<DownLoadmd txt={content} filename={extractFilename(prompt)+'.md'}></DownLoadmd>}
                     {/*usage&&(typeof window !== 'undefined')&&<Memory message={message}></Memory>*/}
             </div>
 
+            {/* Stats - Usage, Error */}
             {usage&&<div className='p-4 text-xs font-mono font-thin text-center'>{JSON.stringify(usage)}</div>}
             {error&& <div className='text-red-500 text-xs font-thin font-mono text-center'>{JSON.stringify(error)}</div>}
         

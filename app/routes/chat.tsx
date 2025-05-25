@@ -127,10 +127,15 @@ export default function Component({loaderData,actionData,params,matches}: Route.
   const userId = data?.userId || "";
   const inputText = data?.inputText || "";
 
-  const {models,isLoadingModel,modelError} = useModels("http://localhost:11434/v1/models");
-  //const {models,isLoadingModel,modelError} = useModels("https://openrouter.ai/api/v1/models");
+  let modelURL=""
+  
+  if (model !== '')
+      modelURL = local?"http://localhost:11434/v1/models":`https://openrouter.ai/api/v1/models/${model}/endpoints`
+  console.log("chat component modelURL ",modelURL)
+  const {models,isLoadingModel,modelError} = useModels(modelURL);
+  //const {models,isLoadingModel,modelError} = useModels("https://openrouter.ai/api/v1/models");/api/v1/models/${model}
   console.log("Models: data: ",models,isLoadingModel,modelError);
-   const [messageAndError,setMessageAndError]=useState([[],null,[],null]); // message,usage,responseJSON an array of all response lines, chatError
+   const [messageAndError,setMessageAndError]=useState([[],null,null]); // message,usage, chatError
   // const noMessage = messageAndError[0]?.length===0?true:false;
   // const [newConversaton,setNewConversation]=useState(true); // whenever component mounts 
    const divRef = useRef<HTMLDivElement>(null);
@@ -291,6 +296,7 @@ export default function Component({loaderData,actionData,params,matches}: Route.
   return (
     <div ref={outerRef} className="m-4 rounded-lg p-10 bg-blue-50 ">
        {model && <pre className='text-xs font-thin text-gray-500'>{task} using {model}</pre>}
+       
         {prompt && 
 
                   
@@ -301,14 +307,10 @@ export default function Component({loaderData,actionData,params,matches}: Route.
                                           fontFamily="font-sans"
                                           textColor={"text-gray-500"}/>
                   </div>}
-                  {/* Local=false Implies use OpenRouter component*/} 
                   {prompt  && messages.length>0 &&
                   <ChatCommon local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatCommon>}
-                  {/*LOCAL MODEL implies use ChatOllama component*/}
-                  {/*prompt && local &&  messages.length>0 &&
-                  <ChatOllama local={local} messages={messages} prompt={prompt} model={model} task={task} showStats={true} update={updateMessageAndError}></ChatOllama>*/}
-        
-        <div ref={divRef} className="btn btn-circle"><NotebookPen /></div>
+                 
+        <div ref={divRef} className="btn btn-circle"></div>
        <div className="relative h-screen ">
           <div className="px-10 fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full  max-w-7xl">
           <Prompt url="/chat"></Prompt>

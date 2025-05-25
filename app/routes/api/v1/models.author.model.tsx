@@ -33,12 +33,12 @@ export async function loader(args: Route.LoaderArgs) {
         throw new Response("Model parameters: Not Found", { status: 404 });
     }
     console.log("Model parameters: ", parameters);
-    return {parameters};
+    return parameters;
   
   }
    
    
-
+/* 
 export default function Home({actionData,loaderData
 }: Route.ComponentProps) {
     const {parameters} = loaderData;
@@ -53,3 +53,4 @@ export default function Home({actionData,loaderData
     </div>
     </div>;
 }
+ */

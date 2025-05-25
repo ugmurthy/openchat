@@ -224,17 +224,17 @@ function getStreamContent(jsonArray:[]) {
       let chaterror=null;
       if (contentType === 'application/x-ndjson') {
         [content, usage] = getNDjsonContent(parseNDjson(compactData));
-        //debug&&console.log("useOpenRouter: NDJSON content \n------\n",content,'\n------\n',usage,'\n------\n');
+        debug&&console.log("useOpenRouter: NDJSON content \n------\n",content,'\n------\n',usage,'\n------\n');
         
       }
       if (contentType === 'text/event-stream') {
         [content, chaterror] = getStreamContent(parseStreamData(compactData));
         let lastString = done && compactData[compactData.length-2].substring(6);
         usage = done && JSON.parse(lastString)
-        //debug&&console.log("useOpenRouter: text/event-stream content \n------\n",content,'\n------\n',usage,'\n------\n');
+        debug&&console.log("useOpenRouter: text/event-stream content \n------\n",content,'\n------\n',usage,'\n------\n');
        
       }
-      console.log("useOpenRouter: \n------\n",content,'\n------\n',usage,'\n------\n');
+      //console.log("useOpenRouter: \n------\n",content,'\n------\n',usage,'\n------\n');
       let isLoading = compactData.length === 0 && !done;
       return [content,chaterror,isLoading,usage,abort]
       //return [compactData,error, isLoading, isConnected,abort]

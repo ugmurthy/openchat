@@ -1,13 +1,19 @@
 import useSWR from 'swr';
 async function fetcher(url:string) {
-    if (!url) {
+    if (url==="") {
+      console.log("useModels no url",)
       return {}
     }
-    const response = await fetch(url)
-    if (!response.ok) {
-    throw new Error('Failed to fetch data')
+    try {
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error ("Failed to fetch model data")
+      }
+      return await response.json()
+    } catch (e) {
+      throw new Error("Failed to fetch model data")
     }
-    return await response.json()
+    
 }
 export function useModels (urlModels:string) {
     const { data, error, isLoading } = useSWR(`${urlModels}`, fetcher)
